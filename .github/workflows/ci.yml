@@ -20,7 +20,7 @@ jobs:
     - name: Lint
       run: flake8
     - name: Mypy
-      run: mypy -m project8
+      run: mypy project8
     - name: Test
       run: pytest
     - name: Install build
