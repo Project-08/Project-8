@@ -1,0 +1,5 @@
+*.DS_Store
+*.egg-info/
+.ropeproject/
+__pycache__/
+dist/

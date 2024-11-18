@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project8"
+version = "0.0.1"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "Flake8-pyproject",
+    "flake8",
+    "mypy",
+    "pytest"
+]
+lsp = [
+    "pylsp-mypy",
+    "pylsp-rope",
+    "python-lsp-isort",
+    "python-lsp-server[all]"
+]
+
+[tool.setuptools]
+py-modules = ["project8"]
+
+[tool.flake8]
+exclude = ["old"]
+
+[tool.mypy]
+strict = true
+
+[tool.pydocstyle]
+# Ignore various documentation-related warnings (for now)
+ignore = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D107",
+    "D205",
+    "D208",
+    "D212",
+    "D400",
+    "D415"
+]
