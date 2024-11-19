@@ -3,3 +3,5 @@
 .ropeproject/
 __pycache__/
 dist/
+lossData.txt
+last_model.pt
