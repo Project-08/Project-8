@@ -21,10 +21,7 @@ class DRM_block(nn.Module):
         self.act_fn = act_fn
         self.layers = nn.ModuleList()
         for i in range(n_linear):
-            layer = nn.Linear(width, width)
-            # nn.init.xavier_uniform_(layer.weight, gain=0.1)
-            # nn.init.zeros_(layer.bias)
-            self.layers.append(layer)
+            self.layers.append(nn.Linear(width, width))
             self.layers.append(act_fn)
 
     def forward(self, x):

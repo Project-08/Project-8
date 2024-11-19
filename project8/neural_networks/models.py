@@ -35,7 +35,7 @@ class NN(nn.Module):
             out = out + str(layer) +'\n'
         return out
 
-    # rectangular linear FNN constructor (for PINN)
+    # rectangular FNN constructor (for PINN)
     @staticmethod
     def simple_linear(n_in: int, n_out: int, width: int, depth: int, act_fn: nn.Module):
         layers = nn.ModuleList()
