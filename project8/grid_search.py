@@ -56,6 +56,7 @@ fixed_params = {
     "sampleStep": [10],    # Sampling frequency for dynamically adjusting training samples
     "area": None,  # Calculate this once if it doesn't change
     "step_size": [5000],   # Step size for learning rate scheduler, could be varied if using a scheduler in grid search
+    "trainStep": [50000],  # Number of training steps
 }
 fixed_params['area'] = [av.areaVolume(fixed_params['radius'][0], fixed_params['d'][0])]
 
