@@ -35,3 +35,14 @@ class DRM_block(nn.Module):
         for layer in self.layers:
             out = out + '   ' + str(layer) + '\n'
         return out + '   ' + '+ block input (skip/residual connection)'
+
+class Sin(nn.Module):
+    def __init__(self, multiplier=1):
+        super().__init__()
+        self.multiplier = multiplier
+
+    def forward(self, x):
+        return torch.sin(x*self.multiplier)
+
+    def __str__(self):
+        return f'Sin(multiplier={self.multiplier})'

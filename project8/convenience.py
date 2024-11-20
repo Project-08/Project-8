@@ -8,7 +8,7 @@ import time
 
 def get_device(override: str = None):
     if override is not None:
-        return torch.device(override)
+        return override
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     if device == 'cpu':
         warn('CUDA/ROCm not available, Using CPU.')
@@ -24,8 +24,8 @@ def plot_2d(x, y, f, title, fig_id=0, filename=None):
     plt.xlabel('x')
     plt.ylabel('y')
     plt.title(title)
-    if domain[1] - domain[0] < domain[3] - domain[2]:
-        plt.colorbar()
+    if domain[1] - domain[0] <1.1* (domain[3] - domain[2]):
+        plt.colorbar(orientation='vertical')
     else:
         plt.colorbar(orientation='horizontal')
     plt.savefig('plots/'+filename)
@@ -46,7 +46,7 @@ def plot_plane(x, y, f, title, fig_id=0, filename=None):
 class float_parameter_space:
     def __init__(self, domain: iter, device='cpu'):
         # domain is a 2D tensor of floats, for constant parameters, use [a, a]
-        # all methods output a tensor of floats ready to be used in models
+        # most methods output a tensor of float64 ready to be used in models, in shape (n, d)
         # all methods are generally a lot slower on gpu than on cpu,
         # but still faster than having this class on cpu and moving output to gpu
         self.domain = torch.tensor(domain, dtype=torch.float64, device=device)
@@ -68,7 +68,7 @@ class float_parameter_space:
         if center is None:
             center = self.center
         if amp is None:
-            amp = self.amp
+            amp = self.amp / 3
         rand = center + amp * torch.randn(n, self.domain.shape[0], device=self.device)
         return rand
 
@@ -96,7 +96,7 @@ class float_parameter_space:
         return grids
 
     def fgrid(self, n: int) -> torch.Tensor:
-        # flat grid
+        # flattened grid
         # returns a tensor of shape (n^d, d)
         # lexicographically ordered (first dimension changes fastest)
         # slow
@@ -185,9 +185,9 @@ def format_time(t):
         return f'{t/3600:.2f} h'
 
 if __name__ == "__main__":
-    device = get_device()
+    # device = get_device()
     domain = [[-1, 1], [-1, 1]]
-    space = float_parameter_space(domain, device)
-    tmr = timer(); tmr.start()
-    bndry = space.rand(100)
-    tmr.stop(); tmr.rr()
+    space = float_parameter_space(domain, 'cpu')
+    loc = space.bndry_rand(1000).detach().to('cpu')
+    plt.scatter(loc[:,0], loc[:,1], s=1)
+    plt.show()
