@@ -1,48 +1,75 @@
 import neural_networks
+import convenience as cv
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-model = neural_networks.models.NN.DRM(2, 10, 4)
-# model = neural_networks.models.NN.simple_linear(1, 1, 32, 5, torch.nn.ReLU())
-print(model)
-model.to(device)
-model.initialize_weights(torch.nn.init.xavier_uniform_, torch.nn.init.zeros_, weight_init_kwargs={'gain': 0.1})
-
 def drm_forcing_2d_poisson(input):
     # eq 12 in paper: f=1
-    return input[:, 0] * 0 + 1
+    f = input[:, 0] * -3
+    return f.unsqueeze(1)
 
-def drm_loss_2d_poisson(input: torch.Tensor, output: torch.Tensor, grid_shape, beta=500): # model input and output
-    nabla_u = torch.autograd.grad(output, input, grad_outputs=torch.ones_like(output), create_graph=True)[0]
-    forcing = drm_forcing_2d_poisson(input)
-    # eq 13 in paper:
-    loss1 = 0.5 * (nabla_u[:, 0] ** 2 + nabla_u[:, 1] ** 2) - forcing*output #  first term (integrate over domain)
-    loss2 = output**2 # second term (integrate over boundary)
-    # assuming lexicographically ordered grid
-    loss1 = loss1.reshape(grid_shape)
-    loss2 = loss2.reshape(grid_shape)
-    # domain loss:
-    loss1 = torch.sum(loss1[1:-1, 1:-1])
-    # boundary loss:
-    loss2 = torch.sum(loss2[0, :]) + torch.sum(loss2[-1, :]) + torch.sum(loss2[:, 0]) + torch.sum(loss2[:, -1])
-    return loss1 + beta * loss2
+def sourcefunc_nmfde_A3(input, alpha=40):
+    sum = 0
+    for i in range(1,10):
+        for j in range(1,5):
+            sum += torch.exp(-alpha*(input[:, 0]-i)**2 - alpha*(input[:,1]-j)**2)
+    return sum
 
-resolution = 128
-input = torch.meshgrid(torch.linspace(-1, 1, resolution), torch.linspace(-1, 1, resolution), indexing='ij')
-input = torch.stack(input, dim=-1).reshape(-1, 2).to(device)
-print(input.shape)
-n_epochs = 5000
-optimizer = torch.optim.Adam(model.parameters())
-criterion = torch.nn.MSELoss()
+def source(input):
+    return drm_forcing_2d_poisson(input)
+
+def drm_loss_2d_poisson_domain(domain_input, domain_output):
+    # sum/mean of 0.5 * (u_x^2 + u_y^2) - f*u in the domain
+    # eq 13 first term
+    model.zero_grad()
+    nabla_u = torch.autograd.grad(domain_output,domain_input,grad_outputs=torch.ones_like(domain_output),retain_graph=True,create_graph=True,only_inputs=True)[0]
+    f = source(domain_input)
+    return torch.mean(0.5 * torch.sum(nabla_u * nabla_u, 1).unsqueeze(1) - f * domain_output)
+
+def drm_loss_2d_poisson_bndry(bndry_output):
+    # sum/mean of u^2 on the boundary
+    # eq 13 second term
+    return torch.mean(bndry_output * bndry_output)
+
+device = cv.get_device()
+model = neural_networks.models.NN.DRM(2, 10, 4)
+print(model)
+model.to(device)
+model.double()
+model.initialize_weights(torch.nn.init.xavier_uniform_, torch.nn.init.zeros_, weight_init_kwargs={'gain': 0.5})
+n_epochs = 3000
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+coord_space = cv.float_parameter_space([[-1, 1], [-1, 1]], device)
+# test source function
+f_loc = coord_space.fgrid(100)
+f = source(f_loc)
+x, y = coord_space.regrid(f_loc)
+f = coord_space.regrid(f)[0]
+f = f.detach().to('cpu')
+x = x.detach().to('cpu')
+y = y.detach().to('cpu')
+cv.plot_2d(x, y, f, title='source function', fig_id=1)
+
 for epoch in range(n_epochs):
-    input.requires_grad = True
+    domain_input = coord_space.rand(1000).requires_grad_(True)
+    domain_output = model(domain_input)
+    loss1 = drm_loss_2d_poisson_domain(domain_input, domain_output)
+    bndry_input = coord_space.bndry_rand(1000).requires_grad_(True)
+    bndry_output = model(bndry_input)
+    loss2 = drm_loss_2d_poisson_bndry(bndry_output)
+    loss = loss1 + 500 * loss2
     optimizer.zero_grad()
-    output = model(input)
-    loss = drm_loss_2d_poisson(input, output, (resolution, resolution))
     loss.backward()
     optimizer.step()
-    print(f'Epoch {epoch} loss: {loss.item()}')
+    if epoch % 100 == 0:
+        print(f'Epoch {epoch}, loss1: {loss1.item()}, loss2: {loss2.item()}, loss: {loss.item()}')
 
-
+grid = coord_space.fgrid(100)
+output = model(grid)
+x, y = coord_space.regrid(grid)
+f = coord_space.regrid(output)[0]
+f = f.detach().to('cpu')
+x = x.detach().to('cpu')
+y = y.detach().to('cpu')
+cv.plot_2d(x, y, f, title='output')
