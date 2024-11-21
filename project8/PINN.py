@@ -27,24 +27,34 @@ def source4(input):
 def source(input):
     return source4(input)
 
-def drm_loss_2d_poisson_domain(domain_input, domain_output):
-    # sum/mean of 0.5 * (u_x^2 + u_y^2) - f*u in the domain
-    # eq 13 first term
-    model.zero_grad()
-    nabla_u = torch.autograd.grad(domain_output,domain_input,grad_outputs=torch.ones_like(domain_output),retain_graph=True,create_graph=True,only_inputs=True)[0]
-    f = source(domain_input)
-    return torch.mean(0.5 * torch.sum(nabla_u * nabla_u, 1).unsqueeze(1) - f * domain_output)
+def nabla(u, x):
+    return torch.autograd.grad(
+        u, x, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True, only_inputs=True
+    )[0]
 
-def drm_loss_2d_poisson_bndry(bndry_output):
-    # sum/mean of u^2 on the boundary
-    # eq 13 second term
-    return torch.mean(bndry_output * bndry_output)
+def laplacian(u, x): # credit to copilot
+    nabla_u = nabla(u, x)
+    laplacian_u = torch.zeros_like(u)
+    for i in range(x.shape[1]):
+        second_order_deriv = torch.autograd.grad(
+            nabla_u[:, i], x, grad_outputs=torch.ones_like(nabla_u[:, i]),
+            retain_graph=True, create_graph=True, only_inputs=True
+        )[0][:, i]
+        laplacian_u += second_order_deriv.unsqueeze(1)
+    return laplacian_u
+
+def pinn_domain_loss_nd_laplacian(domain_input, domain_output):
+    laplacian_u = laplacian(domain_output, domain_input)
+    f = source(domain_input)
+    return (laplacian_u + f).pow(2).mean()
+
+def pinn_bndry_loss(bndry_output: torch.Tensor):
+    return bndry_output.pow(2).mean()
 
 device = cv.get_device()
 # init model
 act_fn = neural_networks.modules.Sin(torch.pi)
-model = neural_networks.models.NN.DRM(2, 20, 4, act_fn=act_fn)
-# model = neural_networks.models.NN.simple_linear(2, 1, 32, 9, act_fn=act_fn)
+model = neural_networks.models.NN.simple_linear(2, 1, 64, 9, act_fn=act_fn)
 print(model)
 model.to(device)
 model.double()
@@ -69,11 +79,11 @@ cv.plot_2d(x, y, f, title='source function', fig_id=1)
 for epoch in range(n_epochs):
     domain_input = coord_space.rand(1000).requires_grad_(True)
     domain_output = model(domain_input)
-    domain_loss = drm_loss_2d_poisson_domain(domain_input, domain_output)
+    domain_loss = pinn_domain_loss_nd_laplacian(domain_input, domain_output)
     bndry_input = coord_space.bndry_rand(500).requires_grad_(True)
     bndry_output = model(bndry_input)
-    bndry_loss = drm_loss_2d_poisson_bndry(bndry_output)
-    loss = domain_loss + 100 * bndry_loss
+    bndry_loss = pinn_bndry_loss(bndry_output)
+    loss = domain_loss + 10* bndry_loss
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
@@ -88,4 +98,4 @@ f = coord_space.regrid(output)[0]
 f = f.detach().to('cpu')
 x = x.detach().to('cpu')
 y = y.detach().to('cpu')
-cv.plot_2d(x, y, f, title='output_drm')
+cv.plot_2d(x, y, f, title='output_pinn')

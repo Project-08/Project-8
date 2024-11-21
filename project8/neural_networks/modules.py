@@ -17,8 +17,6 @@ class DRM_block(nn.Module):
     # DRM block as described in deep ritz paper, defaults are also in paper
     def __init__(self, width: int, act_fn: nn.Module=polyReLU(3), n_linear: int = 2):
         super().__init__()
-        self.width = width
-        self.act_fn = act_fn
         self.layers = nn.ModuleList()
         for i in range(n_linear):
             self.layers.append(nn.Linear(width, width))

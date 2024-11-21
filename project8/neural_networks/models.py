@@ -15,10 +15,8 @@ class NN(nn.Module):
         return x
 
     def initialize_weights(self, weight_init, bias_init, weight_init_kwargs=None, bias_init_kwargs=None):
-        if weight_init_kwargs is None:
-            weight_init_kwargs = {}
-        if bias_init_kwargs is None:
-            bias_init_kwargs = {}
+        if weight_init_kwargs is None: weight_init_kwargs = {}
+        if bias_init_kwargs is None: bias_init_kwargs = {}
         for layer in self.layers:
             if isinstance(layer, nn.Linear):
                 weight_init(layer.weight, **weight_init_kwargs)
@@ -54,7 +52,7 @@ class NN(nn.Module):
         if dim_in != width:
             layers.append(nn.Linear(dim_in, width))
         if dim_in < width:
-            warnings.warn('padding input with zeros when n_in<width is not implemented')
+            warnings.warn('padding input with zeros when n_in<width is not implemented (described in paper)')
         for i in range(n_blocks):
             layers.append(mod.DRM_block(width, act_fn, n_linear_drm))
         layers.append(nn.Linear(width, 1))
