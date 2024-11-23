@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - gpu-spsolve
   pull_request:
 
 jobs:
@@ -11,12 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: Jimver/cuda-toolkit@master
+      id: cuda-toolkit
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: 3.11
+        cache: 'pip'
+        cache-dependency-path: pyproject.toml
+    - name: Install dependencies
+      run: python -m pip install -e '.[dev]'
     - name: Install
-      run: python -m pip install '.[dev]'
+      run: python -m pip install .
     - name: Lint
       run: flake8
     - name: Mypy

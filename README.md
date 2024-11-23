@@ -9,7 +9,7 @@ pip install '.[dev]'
 
 To run the project as an executable, run
 ```sh
-python project8
+python -m project8
 ```
 
 ## Way of Working
