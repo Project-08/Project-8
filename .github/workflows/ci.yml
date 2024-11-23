@@ -23,7 +23,9 @@ jobs:
     - name: Lint
       run: flake8
     - name: Mypy
-      run: mypy project8
+      run: |
+        mypy project8
+        mypy tests
     - name: Test
       run: pytest
     - name: Install build

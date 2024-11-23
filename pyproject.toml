@@ -32,6 +32,9 @@ py-modules = ["project8"]
 [tool.flake8]
 exclude = ["old"]
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.pydocstyle]
 # Ignore various documentation-related warnings (for now)
 ignore = [

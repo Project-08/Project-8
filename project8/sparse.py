@@ -46,6 +46,11 @@ class CuSparseTriSolve(TriSolve):
     def solve_tri(self, dl: cp.ndarray, d: cp.ndarray, du: cp.ndarray,
                   b: cp.ndarray) -> tuple[cp.ndarray, Perf]:
         n = d.shape[0]
+        dl = cp.concatenate((cp.zeros(1), dl), dtype=cp.float64)
+        d = d.astype(cp.float64)
+        du = cp.concatenate((du, cp.zeros(1)), dtype=cp.float64)
+        b = b.astype(cp.float64)
+
         start_event = Event()
         end_event = Event()
         start_ns = process_time_ns()
@@ -53,15 +58,14 @@ class CuSparseTriSolve(TriSolve):
         buffer_size = cusparse.dgtsv2_nopivot_bufferSizeExt(
             self._handle, n, 1, dl.data.ptr, d.data.ptr, du.data.ptr,
             b.data.ptr, n)
-        p_buffer = cp.empty(buffer_size, dtype=cp.uint8)
+        p_buffer = cp.zeros(buffer_size, dtype=cp.uint8)
         start_event.record()
         cusparse.dgtsv2_nopivot(self._handle, n, 1, dl.data.ptr, d.data.ptr,
                                 du.data.ptr, b.data.ptr, n, p_buffer.data.ptr)
         end_event.record()
         end_event.synchronize()
-        x = b.copy()
         end_ns = process_time_ns()
-        return (x,
+        return (b,
                 Perf.from_measurements((start_ns, end_ns),
                                        (start_event, end_event),
                                        buffer_size,
