@@ -34,8 +34,8 @@ class NN(nn.Module):
         return out
 
     # rectangular FNN constructor (for PINN)
-    @staticmethod
-    def simple_linear(n_in: int, n_out: int, width: int, depth: int, act_fn: nn.Module):
+    @classmethod
+    def simple_linear(cls, n_in: int, n_out: int, width: int, depth: int, act_fn: nn.Module):
         layers = nn.ModuleList()
         layers.append(nn.Linear(n_in, width))
         layers.append(act_fn)
@@ -43,11 +43,11 @@ class NN(nn.Module):
             layers.append(nn.Linear(width, width))
             layers.append(act_fn)
         layers.append(nn.Linear(width, n_out))
-        return NN(layers)
+        return cls(layers)
 
     # DRM NN constructor
-    @staticmethod
-    def DRM(dim_in: int, width: int, n_blocks: int, act_fn: nn.Module = mod.polyReLU(3), n_linear_drm: int = 2):
+    @classmethod
+    def DRM(cls, dim_in: int, width: int, n_blocks: int, act_fn: nn.Module = mod.polyReLU(3), n_linear_drm: int = 2):
         layers = nn.ModuleList()
         if dim_in != width:
             layers.append(nn.Linear(dim_in, width))
@@ -56,5 +56,53 @@ class NN(nn.Module):
         for i in range(n_blocks):
             layers.append(mod.DRM_block(width, act_fn, n_linear_drm))
         layers.append(nn.Linear(width, 1))
-        return NN(layers)
+        return cls(layers)
 
+
+class diff_NN(NN):
+    ''' Neural network with differential operators implemented,
+    for convenience and efficiency writing pinn and drm loss functions.
+
+    Differential operations are cached for efficiency, cache is reset at each forward pass.
+
+    Dimension indexes are used for partial derivatives, e.g. first_diff(0) is du/dx, second_diff(0, 1) is d^2u/dxdy.
+    convention: last dimension is time, so xyzt, or xyz, or xyt etc.'''
+    def __init__(self, layers: nn.ModuleList):
+        super().__init__(layers)
+        self.input = None
+        self.output = None
+        self.__cache = {} # only access cache through methods
+
+    def forward(self, x):
+        self.__cache = {} # reset cached differences
+        self.input = x
+        self.output = super().forward(x)
+        return self.output
+
+    def gradient_vector(self):
+        if 'gradient' not in self.__cache:
+            self.__cache['gradient'] = torch.autograd.grad(self.output, self.input, grad_outputs=torch.ones_like(self.output), create_graph=True)[0]
+        return self.__cache['gradient']
+
+    def first_diff(self, dim_index):
+        return self.gradient_vector()[:, dim_index].unsqueeze(1)
+
+    def second_diff(self, dim_index_1, dim_index_2):
+        cache_entry = 'second_diffs_'+str(dim_index_1)
+        if cache_entry not in self.__cache:
+            grad = self.gradient_vector()[:, dim_index_1]
+            self.__cache[cache_entry] = torch.autograd.grad(
+                grad, self.input, grad_outputs=torch.ones_like(grad), create_graph=True
+            )[0]
+        return self.__cache[cache_entry][:, dim_index_2].unsqueeze(1)
+
+    def laplacian(self):
+        # returns laplacian of output, but the entire hessian is computed and cached
+        # possible efficiency improvement by not caching the entire hessian, but it has to be computed (I think)
+        if 'laplacian' not in self.__cache:
+            laplacian_u = torch.zeros_like(self.output)
+            for i in range(self.input.shape[1]):
+                laplacian_u += self.second_diff(i, i)
+            self.__cache['laplacian'] = laplacian_u
+            return laplacian_u # maybe more efficient to return here instead of looking up cache
+        return self.__cache['laplacian']

@@ -29,7 +29,7 @@ def source(input):
 
 def nabla(u, x):
     return torch.autograd.grad(
-        u, x, grad_outputs=torch.ones_like(u), retain_graph=True, create_graph=True, only_inputs=True
+        u, x, grad_outputs=torch.ones_like(u), create_graph=True
     )[0]
 
 def laplacian(u, x): # credit to copilot
@@ -37,8 +37,7 @@ def laplacian(u, x): # credit to copilot
     laplacian_u = torch.zeros_like(u)
     for i in range(x.shape[1]):
         second_order_deriv = torch.autograd.grad(
-            nabla_u[:, i], x, grad_outputs=torch.ones_like(nabla_u[:, i]),
-            retain_graph=True, create_graph=True, only_inputs=True
+            nabla_u[:, i], x, grad_outputs=torch.ones_like(nabla_u[:, i]), create_graph=True
         )[0][:, i]
         laplacian_u += second_order_deriv.unsqueeze(1)
     return laplacian_u
@@ -64,6 +63,7 @@ model.initialize_weights(torch.nn.init.xavier_uniform_, torch.nn.init.zeros_, we
 n_epochs = 5000
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 coord_space = cv.float_parameter_space([[-1, 2], [-1, 1]], device) # domain defined here
+tmr = cv.timer()
 
 # plot source function
 f_loc = coord_space.fgrid(300)
@@ -76,6 +76,7 @@ y = y.detach().to('cpu')
 cv.plot_2d(x, y, f, title='source function', fig_id=1)
 
 # train
+tmr.start()
 for epoch in range(n_epochs):
     domain_input = coord_space.rand(1000).requires_grad_(True)
     domain_output = model(domain_input)
@@ -89,6 +90,7 @@ for epoch in range(n_epochs):
     optimizer.step()
     if epoch % 100 == 0:
         print(f'Epoch {epoch}, domain loss: {domain_loss.item()}, boundary loss: {bndry_loss.item()}, total: {loss.item()}')
+tmr.rr()
 
 # plot output
 grid = coord_space.fgrid(200)

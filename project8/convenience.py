@@ -186,8 +186,9 @@ def format_time(t):
 
 if __name__ == "__main__":
     # device = get_device()
-    domain = [[-1, 1], [-1, 1]]
+    domain = [[-1, 4], [-1, 1]]
     space = float_parameter_space(domain, 'cpu')
-    loc = space.bndry_rand(1000).detach().to('cpu')
+    loc = space.bndry_rand(200).detach().to('cpu')
     plt.scatter(loc[:,0], loc[:,1], s=1)
+    plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
