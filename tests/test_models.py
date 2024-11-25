@@ -28,7 +28,7 @@ def train(model) -> float:
 
 
 def test_drm() -> None:
-    model = neural_network.models.NN.drm(1, 5, 3)
+    model = neural_network.models.NN.drm(1, 1, 5, 3)
     loss = train(model)
     assert loss < 0.5
 
@@ -40,7 +40,7 @@ def test_pinn() -> None:
 
 
 def test_diff_drm() -> None:
-    model = neural_network.models.diff_NN.drm(1, 5, 3)
+    model = neural_network.models.diff_NN.drm(1, 1, 5, 3)
     loss = train(model)
     assert loss < 0.5
 
