@@ -53,7 +53,7 @@ def pinn_bndry_loss(bndry_output: torch.Tensor):
 device = cv.get_device()
 # init model
 act_fn = neural_networks.modules.Sin(torch.pi)
-model = neural_networks.models.NN.simple_linear(2, 1, 64, 9, act_fn=act_fn)
+model = neural_networks.models.NN.rectangular_fnn(2, 1, 64, 9, act_fn=act_fn)
 print(model)
 model.to(device)
 model.double()

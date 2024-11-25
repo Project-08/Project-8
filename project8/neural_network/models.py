@@ -35,7 +35,7 @@ class NN(nn.Module):
 
     # rectangular FNN constructor (for PINN)
     @classmethod
-    def simple_linear(cls, n_in: int, n_out: int, width: int, depth: int, act_fn: nn.Module):
+    def rectangular_fnn(cls, n_in: int, n_out: int, width: int, depth: int, act_fn: nn.Module):
         layers = nn.ModuleList()
         layers.append(nn.Linear(n_in, width))
         layers.append(act_fn)
@@ -47,7 +47,7 @@ class NN(nn.Module):
 
     # DRM NN constructor
     @classmethod
-    def DRM(cls, dim_in: int, width: int, n_blocks: int, act_fn: nn.Module = mod.polyReLU(3), n_linear_drm: int = 2):
+    def drm(cls, dim_in: int, width: int, n_blocks: int, act_fn: nn.Module = mod.polyReLU(3), n_linear_drm: int = 2):
         layers = nn.ModuleList()
         if dim_in != width:
             layers.append(nn.Linear(dim_in, width))
@@ -60,49 +60,51 @@ class NN(nn.Module):
 
 
 class diff_NN(NN):
-    ''' Neural network with differential operators implemented,
+    """ Neural network with differential operators implemented,
     for convenience and efficiency writing pinn and drm loss functions.
 
     Differential operations are cached for efficiency, cache is reset at each forward pass.
 
-    Dimension indexes are used for partial derivatives, e.g. first_diff(0) is du/dx, second_diff(0, 1) is d^2u/dxdy.
-    convention: last dimension is time, so xyzt, or xyz, or xyt etc.'''
+    Dimension indexes (0 indexed) are used for partial derivatives.
+    convention: last dimension is time, so xyzt, or xyz, or xyt etc."""
     def __init__(self, layers: nn.ModuleList):
         super().__init__(layers)
         self.input = None
         self.output = None
+        # self.use_cache = True
         self.__cache = {} # only access cache through methods
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         self.__cache = {} # reset cached differences
         self.input = x
         self.output = super().forward(x)
         return self.output
 
-    def gradient_vector(self):
+    def gradient(self) -> torch.Tensor:
+        """Returns gradient vector of the last output wrt last input"""
         if 'gradient' not in self.__cache:
             self.__cache['gradient'] = torch.autograd.grad(self.output, self.input, grad_outputs=torch.ones_like(self.output), create_graph=True)[0]
         return self.__cache['gradient']
 
-    def first_diff(self, dim_index):
-        return self.gradient_vector()[:, dim_index].unsqueeze(1)
+    def diff(self, *dim_indexes: int) -> torch.Tensor:
+        """Main method for getting partial derivatives.
+        args are dimension indexes, e.g. diff(0, 1) is u_xy."""
+        diff = self.gradient()[:, dim_indexes[0]]
+        key = 'diff'
+        for i in range(1, len(dim_indexes)):
+            key += str(dim_indexes[i-1])
+            if key not in self.__cache:
+                self.__cache[key] = torch.autograd.grad(diff, self.input, grad_outputs=torch.ones_like(diff), create_graph=True)[0]
+            diff = self.__cache[key][:, dim_indexes[i]]
+        return diff.unsqueeze(1)
 
-    def second_diff(self, dim_index_1, dim_index_2):
-        cache_entry = 'second_diffs_'+str(dim_index_1)
-        if cache_entry not in self.__cache:
-            grad = self.gradient_vector()[:, dim_index_1]
-            self.__cache[cache_entry] = torch.autograd.grad(
-                grad, self.input, grad_outputs=torch.ones_like(grad), create_graph=True
-            )[0]
-        return self.__cache[cache_entry][:, dim_index_2].unsqueeze(1)
-
-    def laplacian(self):
-        # returns laplacian of output, but the entire hessian is computed and cached
-        # possible efficiency improvement by not caching the entire hessian, but it has to be computed (I think)
+    def laplacian(self) -> torch.Tensor:
+        """Returns laplacian of output, but the entire hessian is computed and cached"""
         if 'laplacian' not in self.__cache:
             laplacian_u = torch.zeros_like(self.output)
             for i in range(self.input.shape[1]):
-                laplacian_u += self.second_diff(i, i)
+                laplacian_u += self.diff(i, i)
             self.__cache['laplacian'] = laplacian_u
-            return laplacian_u # maybe more efficient to return here instead of looking up cache
         return self.__cache['laplacian']
+
+    # maybe more (differential) operators

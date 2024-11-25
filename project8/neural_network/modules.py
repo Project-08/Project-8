@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class polyReLU(nn.Module):
-    # ReLU^n activation function (for DRM)
+    """ReLU^n activation function (for DRM)"""
     def __init__(self, n: int):
         super().__init__()
         self.n = n
@@ -14,7 +14,7 @@ class polyReLU(nn.Module):
         return 'polyReLU(n=' + str(self.n) + ')'
 
 class DRM_block(nn.Module):
-    # DRM block as described in deep ritz paper, defaults are also in paper
+    """DRM block as described in deep ritz paper, defaults are also in paper"""
     def __init__(self, width: int, act_fn: nn.Module=polyReLU(3), n_linear: int = 2):
         super().__init__()
         self.layers = nn.ModuleList()
@@ -35,6 +35,7 @@ class DRM_block(nn.Module):
         return out + '   ' + '+ block input (skip/residual connection)'
 
 class Sin(nn.Module):
+    """Sin activation function"""
     def __init__(self, multiplier=1):
         super().__init__()
         self.multiplier = multiplier

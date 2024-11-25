@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from warnings import warn
 import time
 
-def get_device(override: str = None):
+def get_device(override: str = None) -> str:
     if override is not None:
         return override
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
@@ -14,7 +14,7 @@ def get_device(override: str = None):
         warn('CUDA/ROCm not available, Using CPU.')
     return device
 
-def plot_2d(x, y, f, title, fig_id=0, filename=None):
+def plot_2d(x, y, f, title, fig_id=0, filename=None) -> None:
     if filename is None:
         filename = title + '.png'
     plt.figure(fig_id)
@@ -30,7 +30,7 @@ def plot_2d(x, y, f, title, fig_id=0, filename=None):
         plt.colorbar(orientation='horizontal')
     plt.savefig('plots/'+filename)
 
-def plot_plane(x, y, f, title, fig_id=0, filename=None):
+def plot_plane(x, y, f, title, fig_id=0, filename=None) -> None:
     if filename is None:
         filename = title + '.png'
     fig = plt.figure(fig_id)
@@ -139,6 +139,7 @@ class float_parameter_space:
         return rand
 
 class timer:
+    """Simple timer class"""
     def __init__(self):
         self.t_init = time.time()
         self.t_start = 0

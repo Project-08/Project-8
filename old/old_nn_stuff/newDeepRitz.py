@@ -43,7 +43,7 @@ def drm_loss_2d_poisson_bndry(bndry_output):
 device = cv.get_device()
 # init model
 act_fn = neural_networks.modules.Sin(torch.pi)
-model = neural_networks.models.NN.DRM(2, 20, 4, act_fn=act_fn)
+model = neural_networks.models.NN.drm(2, 20, 4, act_fn=act_fn)
 # model = neural_networks.models.NN.simple_linear(2, 1, 32, 9, act_fn=act_fn)
 print(model)
 model.to(device)
