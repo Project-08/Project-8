@@ -30,7 +30,7 @@ class NN(nn.Module):
     def __str__(self):
         out = ''
         for layer in self.layers:
-            out = out + str(layer) +'\n'
+            out = out + str(layer) + '\n'
         return out
 
     # rectangular FNN constructor (for PINN)
@@ -39,7 +39,7 @@ class NN(nn.Module):
         layers = nn.ModuleList()
         layers.append(nn.Linear(n_in, width))
         layers.append(act_fn)
-        for i in range(1, depth-1):
+        for i in range(1, depth - 1):
             layers.append(nn.Linear(width, width))
             layers.append(act_fn)
         layers.append(nn.Linear(width, n_out))
@@ -47,7 +47,11 @@ class NN(nn.Module):
 
     # DRM NN constructor
     @classmethod
-    def drm(cls, dim_in: int, dim_out: int, width: int, n_blocks: int, act_fn: nn.Module = mod.polyReLU(3), n_linear_drm: int = 2):
+    def drm(cls,
+            dim_in: int, dim_out: int,
+            width: int, n_blocks: int,
+            act_fn: nn.Module = mod.polyReLU(3),
+            n_linear_drm: int = 2):
         layers = nn.ModuleList()
         if dim_in != width:
             layers.append(nn.Linear(dim_in, width))
@@ -71,22 +75,23 @@ class diff_NN(NN):
 
     cache keys: out_dim_indexes + 'name' + in_dim_indexes (e.g. 0diff01 is grad(u_xy))
     """
+
     def __init__(self, layers: nn.ModuleList):
         super().__init__(layers)
         self.input = None
         self.output = None
         # self.use_cache = True
-        self.__cache = {} # only access cache through methods
+        self.__cache = {}  # only access cache through methods
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        self.__cache = {} # reset cached differences
+        self.__cache = {}  # reset cached differences
         self.input = x
         self.output = super().forward(x)
         return self.output
 
     def new_output_col(self, data):
         """Appends a new column to the output tensor.
-        Needed for more complex pde's with multiple outputs and derivatives wrt to e.g. u*v with u and v being outputs."""
+        Needed for more complex pde's with e.g. derivatives wrt to u*v with u and v being outputs."""
         pass
 
     def name_inputs(self):
@@ -100,7 +105,9 @@ class diff_NN(NN):
         key = str(out_dim_index) + 'diff'
         if key not in self.__cache:
             output = self.output[:, out_dim_index].unsqueeze(1)
-            self.__cache[key] = torch.autograd.grad(output, self.input, grad_outputs=torch.ones_like(output), create_graph=True)[0]
+            self.__cache[key] = torch.autograd.grad(
+                output, self.input, grad_outputs=torch.ones_like(output), create_graph=True
+            )[0]
         return self.__cache[key]
 
     def diff(self, *in_dim_indexes: int, out_dim_index=0) -> torch.Tensor:
@@ -111,7 +118,9 @@ class diff_NN(NN):
         for i in range(1, len(in_dim_indexes)):
             key += str(in_dim_indexes[i - 1])
             if key not in self.__cache:
-                self.__cache[key] = torch.autograd.grad(diff, self.input, grad_outputs=torch.ones_like(diff), create_graph=True)[0]
+                self.__cache[key] = torch.autograd.grad(
+                    diff, self.input, grad_outputs=torch.ones_like(diff), create_graph=True
+                )[0]
             diff = self.__cache[key][:, in_dim_indexes[i]]
         return diff.unsqueeze(1)
 
@@ -121,7 +130,9 @@ class diff_NN(NN):
         if vector.shape == self.input.shape:
             div = torch.zeros_like(self.input[:, 0])
             for i in range(self.input.shape[1]):
-                div += torch.autograd.grad(vector[:, i], self.input, grad_outputs=torch.ones_like(vector[:, i]), create_graph=True)[0][:, i]
+                div += torch.autograd.grad(
+                    vector[:, i], self.input, grad_outputs=torch.ones_like(vector[:, i]), create_graph=True
+                )[0][:, i]
             return div.unsqueeze(1)
         else:
             raise Exception('Output shape must be the same as model input shape')

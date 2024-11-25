@@ -4,7 +4,8 @@ import torch
 
 
 def source(input):
-    return torch.sin(4  * input[:, 0] * input[:, 1]).unsqueeze(1)
+    return torch.sin(4 * input[:, 0] * input[:, 1]).unsqueeze(1)
+
 
 def drm_loss_2d_poisson_domain(model: neural_network.models.diff_NN):
     # sum/mean of 0.5 * (u_x^2 + u_y^2) - f*u in the domain
@@ -13,10 +14,12 @@ def drm_loss_2d_poisson_domain(model: neural_network.models.diff_NN):
     f = source(model.input)
     return torch.mean(0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * model.output)
 
+
 def drm_loss_2d_poisson_bndry(model: neural_network.models.diff_NN):
     # sum/mean of u^2 on the boundary
     # eq 13 second term
     return model.output.pow(2).mean()
+
 
 device = cv.get_device()
 # init model
@@ -30,7 +33,7 @@ model.initialize_weights(torch.nn.init.xavier_uniform_, torch.nn.init.zeros_, we
 # training params
 n_epochs = 5000
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-coord_space = cv.float_parameter_space([[-1, 2], [-1, 1]], device) # domain defined here
+coord_space = cv.float_parameter_space([[-1, 2], [-1, 1]], device)  # domain defined here
 tmr = cv.timer()
 
 # plot source function
@@ -55,7 +58,8 @@ for epoch in range(n_epochs):
     loss.backward()
     optimizer.step()
     if epoch % 100 == 0:
-        print(f'Epoch {epoch}, domain loss: {domain_loss.item()}, boundary loss: {bndry_loss.item()}, total: {loss.item()}')
+        print(
+            f'Epoch {epoch}, domain loss: {domain_loss.item()}, boundary loss: {bndry_loss.item()}, total: {loss.item()}')
 tmr.rr()
 
 # plot output

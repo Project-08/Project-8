@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from warnings import warn
 import time
 
+
 def get_device(override: str = None) -> str:
     if override is not None:
         return override
@@ -13,6 +14,7 @@ def get_device(override: str = None) -> str:
     if device == 'cpu':
         warn('CUDA/ROCm not available, Using CPU.')
     return device
+
 
 def plot_2d(x, y, f, title, fig_id=0, filename=None) -> None:
     if filename is None:
@@ -24,11 +26,12 @@ def plot_2d(x, y, f, title, fig_id=0, filename=None) -> None:
     plt.xlabel('x')
     plt.ylabel('y')
     plt.title(title)
-    if domain[1] - domain[0] <1.1* (domain[3] - domain[2]):
+    if domain[1] - domain[0] < 1.1 * (domain[3] - domain[2]):
         plt.colorbar(orientation='vertical')
     else:
         plt.colorbar(orientation='horizontal')
-    plt.savefig('plots/'+filename)
+    plt.savefig('plots/' + filename)
+
 
 def plot_plane(x, y, f, title, fig_id=0, filename=None) -> None:
     if filename is None:
@@ -43,6 +46,7 @@ def plot_plane(x, y, f, title, fig_id=0, filename=None) -> None:
     ax.set_title(title)
     plt.savefig('plots/' + filename)
 
+
 class float_parameter_space:
     def __init__(self, domain: iter, device='cpu'):
         # domain is a 2D tensor of floats, for constant parameters, use [a, a]
@@ -51,17 +55,17 @@ class float_parameter_space:
         # but still faster than having this class on cpu and moving output to gpu
         self.domain = torch.tensor(domain, dtype=torch.float64, device=device)
         self.device = device
-        self.center = (self.domain[:,1] + self.domain[:,0]) / 2
-        self.amp = (self.domain[:,1] - self.domain[:,0]) / 2
-        self.length = self.domain[:,1] - self.domain[:,0]
+        self.center = (self.domain[:, 1] + self.domain[:, 0]) / 2
+        self.amp = (self.domain[:, 1] - self.domain[:, 0]) / 2
+        self.length = self.domain[:, 1] - self.domain[:, 0]
         # probability of each dimension. longest dimension has lowest probability. for bndry_rand
-        self.uniform_bnrdy_prob = 1 - self.length/self.length.sum()
+        self.uniform_bnrdy_prob = 1 - self.length / self.length.sum()
         self.size = self.domain.shape[0]
 
     def rand(self, n: int) -> torch.Tensor:
         # return a uniform random sample of size n from the domain
         # fast
-        rand = torch.rand(n, self.domain.shape[0], device=self.device)*2-1
+        rand = torch.rand(n, self.domain.shape[0], device=self.device) * 2 - 1
         return self.center + self.amp * rand
 
     def randn(self, n: int, center=None, amp=None) -> torch.Tensor:
@@ -81,7 +85,7 @@ class float_parameter_space:
         # slow
         normal = self.randn(n, center, amp)
         uniform = self.rand(n)
-        in_domain = torch.logical_and(torch.gt(normal, self.domain[:,0]), torch.lt(normal, self.domain[:,1]))
+        in_domain = torch.logical_and(torch.gt(normal, self.domain[:, 0]), torch.lt(normal, self.domain[:, 1]))
         return torch.where(in_domain, normal, uniform)
 
     def grid(self, n: int) -> list[torch.Tensor]:
@@ -107,7 +111,7 @@ class float_parameter_space:
 
     def regrid(self, grid, n=None, dims=None) -> torch.Tensor:
         if n is None:
-            n = int(round(grid.shape[0] ** (1 / self.size),0))
+            n = int(round(grid.shape[0] ** (1 / self.size), 0))
         if dims is None:
             if len(grid.shape) == 1:
                 dims = 1
@@ -126,17 +130,17 @@ class float_parameter_space:
             raise ValueError('dims must be >= 1')
 
     def min(self) -> torch.Tensor:
-        return self.domain[:,0]
+        return self.domain[:, 0]
 
     def max(self) -> torch.Tensor:
-        return self.domain[:,1]
+        return self.domain[:, 1]
 
     def bndry_rand(self, n) -> torch.Tensor:
         # return a uniform random sample of size n from the boundary of the domain
         # slow +- 10ms
         rand = self.rand(n)
         which_dim = self.uniform_bnrdy_prob.multinomial(n, replacement=True)
-        which_bndry = torch.randint(0, 2, (n,)) # left(0) or right(1) boundary
+        which_bndry = torch.randint(0, 2, (n,))  # left(0) or right(1) boundary
         rand[torch.arange(n), which_dim] = self.domain[which_dim, which_bndry]
         return rand
 
@@ -149,6 +153,7 @@ class float_parameter_space:
 
 class timer:
     """Simple timer class"""
+
     def __init__(self):
         self.t_init = time.time()
         self.t_start = 0
@@ -180,6 +185,7 @@ class timer:
     def reset(self):
         self.__init__()
 
+
 def format_time(t):
     if t < 1e-6:
         return f"{t * 1e9:.2f} ns"
@@ -190,15 +196,16 @@ def format_time(t):
     elif t < 60:
         return f'{t:.2f} s'
     elif t < 3600:
-        return f'{t/60:.2f} min'
+        return f'{t / 60:.2f} min'
     else:
-        return f'{t/3600:.2f} h'
+        return f'{t / 3600:.2f} h'
+
 
 if __name__ == "__main__":
     # device = get_device()
     domain = [[-1, 3], [-1, 1]]
     space = float_parameter_space(domain, 'cpu')
     loc = space.bndry_rand(100).detach().to('cpu')
-    plt.scatter(loc[:,0], loc[:,1], s=1)
+    plt.scatter(loc[:, 0], loc[:, 1], s=1)
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
