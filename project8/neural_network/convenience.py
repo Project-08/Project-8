@@ -53,6 +53,9 @@ class float_parameter_space:
         self.device = device
         self.center = (self.domain[:,1] + self.domain[:,0]) / 2
         self.amp = (self.domain[:,1] - self.domain[:,0]) / 2
+        self.length = self.domain[:,1] - self.domain[:,0]
+        # probability of each dimension. longest dimension has lowest probability. for bndry_rand
+        self.uniform_bnrdy_prob = 1 - self.length/self.length.sum()
         self.size = self.domain.shape[0]
 
     def rand(self, n: int) -> torch.Tensor:
@@ -129,14 +132,20 @@ class float_parameter_space:
         return self.domain[:,1]
 
     def bndry_rand(self, n) -> torch.Tensor:
-        # return a uniform* random sample of size n from the boundary of the domain
-        # *each boundary has same chance of getting chosen, regardless of size, but after that uniform random
+        # return a uniform random sample of size n from the boundary of the domain
         # slow +- 10ms
         rand = self.rand(n)
-        which_dim = torch.randint(0, self.size, (n,))
-        which_bndry = torch.randint(0, 2, (n,))
+        which_dim = self.uniform_bnrdy_prob.multinomial(n, replacement=True)
+        which_bndry = torch.randint(0, 2, (n,)) # left(0) or right(1) boundary
         rand[torch.arange(n), which_dim] = self.domain[which_dim, which_bndry]
         return rand
+
+    def select_bndry_rand(self, n):
+        # return a uniform random sample of size n from selected boundaries of the domain
+        # slow +- 10ms
+        rand = self.rand(n)
+        raise NotImplementedError
+
 
 class timer:
     """Simple timer class"""
@@ -187,9 +196,9 @@ def format_time(t):
 
 if __name__ == "__main__":
     # device = get_device()
-    domain = [[-1, 4], [-1, 1]]
+    domain = [[-1, 3], [-1, 1]]
     space = float_parameter_space(domain, 'cpu')
-    loc = space.bndry_rand(200).detach().to('cpu')
+    loc = space.bndry_rand(100).detach().to('cpu')
     plt.scatter(loc[:,0], loc[:,1], s=1)
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()

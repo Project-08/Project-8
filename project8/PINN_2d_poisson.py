@@ -28,7 +28,6 @@ n_epochs = 5000
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 coord_space = cv.float_parameter_space([[-1, 2], [-1, 1]], device) # domain defined here
 tmr = cv.timer()
-tmr2 = cv.timer()
 
 # plot source function
 f_loc = coord_space.fgrid(300)
@@ -51,7 +50,6 @@ for epoch in range(n_epochs):
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-    print()
     if epoch % 100 == 0:
         print(f'Epoch {epoch}, domain loss: {domain_loss.item()}, boundary loss: {bndry_loss.item()}, total: {loss.item()}')
 tmr.rr()
@@ -64,4 +62,4 @@ f = coord_space.regrid(output)[0]
 f = f.detach().to('cpu')
 x = x.detach().to('cpu')
 y = y.detach().to('cpu')
-cv.plot_2d(x, y, f, title='output_pinn_2')
+cv.plot_2d(x, y, f, title='output_pinn')
