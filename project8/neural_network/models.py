@@ -33,6 +33,11 @@ class NN(nn.Module):
             out = out + str(layer) + '\n'
         return out
 
+    # no NN constructor
+    @classmethod
+    def empty(cls):
+        return cls(nn.ModuleList())
+
     # rectangular FNN constructor (for PINN)
     @classmethod
     def rectangular_fnn(cls, n_in: int, n_out: int, width: int, depth: int, act_fn: nn.Module):
@@ -89,16 +94,10 @@ class diff_NN(NN):
         self.output = super().forward(x)
         return self.output
 
-    def new_output_col(self, data):
+    def output_append(self, cols: torch.Tensor) -> None:
         """Appends a new column to the output tensor.
-        Needed for more complex pde's with e.g. derivatives wrt to u*v with u and v being outputs."""
-        pass
-
-    def name_inputs(self):
-        pass
-
-    def name_outputs(self):
-        pass
+        Needed for more complex pde's e.g. with derivatives wrt to u*v with u and v being outputs."""
+        self.output = torch.cat((self.output, cols), 1)
 
     def gradient(self, out_dim_index=0) -> torch.Tensor:
         """Returns gradient vector of the last output wrt last input"""

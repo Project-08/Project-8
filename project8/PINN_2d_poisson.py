@@ -1,5 +1,5 @@
 import neural_network
-from project8.neural_network import convenience as cv
+from project8.neural_network import utils as cv
 import torch
 
 
@@ -26,7 +26,7 @@ model.initialize_weights(torch.nn.init.xavier_uniform_, torch.nn.init.zeros_, we
 # training params
 n_epochs = 5000
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-coord_space = cv.float_parameter_space([[-1, 2], [-1, 1]], device) # domain defined here
+coord_space = cv.ParameterSpace([[-1, 2], [-1, 1]], device) # domain defined here
 tmr = cv.timer()
 
 # plot source function
@@ -34,9 +34,6 @@ f_loc = coord_space.fgrid(300)
 f = source(f_loc)
 x, y = coord_space.regrid(f_loc)
 f = coord_space.regrid(f)[0]
-f = f.detach().to('cpu')
-x = x.detach().to('cpu')
-y = y.detach().to('cpu')
 cv.plot_2d(x, y, f, title='source function', fig_id=1)
 
 # train
@@ -59,7 +56,4 @@ grid = coord_space.fgrid(200)
 output = model(grid)
 x, y = coord_space.regrid(grid)
 f = coord_space.regrid(output)[0]
-f = f.detach().to('cpu')
-x = x.detach().to('cpu')
-y = y.detach().to('cpu')
 cv.plot_2d(x, y, f, title='output_pinn')

@@ -1,5 +1,5 @@
 import neural_network
-from project8.neural_network import convenience as cv
+from project8.neural_network import utils as util
 import torch
 
 
@@ -21,7 +21,7 @@ def drm_loss_2d_poisson_bndry(model: neural_network.models.diff_NN):
     return model.output.pow(2).mean()
 
 
-device = cv.get_device()
+device = util.get_device()
 # init model
 act_fn = neural_network.modules.Sin(torch.pi)
 model = neural_network.models.diff_NN.drm(2, 1, 20, 4, act_fn=act_fn)
@@ -33,18 +33,15 @@ model.initialize_weights(torch.nn.init.xavier_uniform_, torch.nn.init.zeros_, we
 # training params
 n_epochs = 5000
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-coord_space = cv.float_parameter_space([[-1, 2], [-1, 1]], device)  # domain defined here
-tmr = cv.timer()
+coord_space = util.ParameterSpace([[-1, 2], [-1, 1]], device)  # domain defined here
+tmr = util.timer()
 
 # plot source function
 f_loc = coord_space.fgrid(300)
 f = source(f_loc)
 x, y = coord_space.regrid(f_loc)
 f = coord_space.regrid(f)[0]
-f = f.detach().to('cpu')
-x = x.detach().to('cpu')
-y = y.detach().to('cpu')
-cv.plot_2d(x, y, f, title='source function', fig_id=1)
+util.plot_2d(x, y, f, title='source function', fig_id=1)
 
 tmr.start()
 # train
@@ -67,7 +64,4 @@ grid = coord_space.fgrid(200)
 output = model(grid)
 x, y = coord_space.regrid(grid)
 f = coord_space.regrid(output)[0]
-f = f.detach().to('cpu')
-x = x.detach().to('cpu')
-y = y.detach().to('cpu')
-cv.plot_2d(x, y, f, title='output_drm')
+util.plot_2d(x, y, f, title='output_drm')

@@ -24,6 +24,8 @@ def train(model) -> float:
             best = loss.item()
         loss.backward()
         optimizer.step()
+        if best < 0.5:
+            break
     return best
 
 
