@@ -7,6 +7,8 @@ name = "project8"
 version = "0.0.1"
 requires-python = ">=3.11"
 dependencies = [
+    "cupy-cuda12x[all]>=13.3",
+    "matplotlib>=3.9",
     "numpy>=2.0"
 ]
 
@@ -30,8 +32,8 @@ py-modules = ["project8"]
 [tool.flake8]
 exclude = ["old"]
 
-[tool.mypy]
-strict = true
+[tool.pytest.ini_options]
+pythonpath = ["."]
 
 [tool.pydocstyle]
 # Ignore various documentation-related warnings (for now)
@@ -42,6 +44,7 @@ ignore = [
     "D103",
     "D104",
     "D107",
+    "D203",
     "D205",
     "D208",
     "D212",
