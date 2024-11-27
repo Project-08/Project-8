@@ -348,35 +348,3 @@ def format_time(t):
     else:
         return f'{t / 3600:.2f} h'
 
-
-
-if __name__ == "__main__":
-    # tests but not in test file
-    def count_points_on_axes(points: torch.Tensor, tolerance: float = 1e-6) -> list:
-        counts = []
-        for i in range(points.shape[1]):
-            counts.append(torch.sum(torch.abs(points[:, points.shape[1] - i - 1]) <= tolerance).item())
-        return counts
-    device = get_device('cpu')
-    domain = [[0, 1], [0, 1], [0, 1]]
-    space = ParameterSpace(domain, device)
-    bound_sel = torch.tensor([[1, 1], [1, 1], [0, 0]], device=device)
-    tmr = timer(); tmr.start()
-    loc = space.select_bndry_rand(10000, bound_sel)
-    tmr.stop(); tmr.read()
-    # loc = space.bndry_rand(1000)
-    print(count_points_on_axes(loc))
-    loc = if_tensors_to_numpy(loc)[0]
-    if loc.shape[1] == 2:
-        plt.scatter(loc[:, 0], loc[:, 1], s=1)
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.show()
-    elif loc.shape[1] == 3:
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(loc[:, 0], loc[:, 1], loc[:, 2], s=1)
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
-        plt.show()
-
