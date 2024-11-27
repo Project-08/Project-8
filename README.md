@@ -12,6 +12,18 @@ To run the project as an executable, run
 python -m project8
 ```
 
+## Using Docker
+On Windows and MacOS, it's likely best to do everything in the docker container. Either download the docker image from the github repository's container repository, or build it as follows
+```sh
+cd docker
+sudo docker image build -t project8 .
+```
+
+Then to run an arbitrary command in docker, run
+```sh
+./docker_run.sh <YOUR_COMMAND>
+```
+
 ## Way of Working
 - Don't merge to main, instead create a pull request and get it reviewed by at least one, but ideally two teammates.
 - Create an issue with the task you're working on, so everyone can monitor progress. Close the issue upon merging your relevant PR.

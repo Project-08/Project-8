@@ -9,15 +9,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: nvidia/cuda:12.6.2-devel-ubuntu24.04
+    container: ghcr.io/<owner>/<image>:<tag>
+    credentials:
+      username: ${{ secrets.GHCR_USERNAME }}
+      password: ${{ secrets.GHCR_TOKEN }}
     env:
       NOGPU: 1
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
     - name: Install dependencies
       run: python -m pip install -e '.[dev]'
     - name: Install
