@@ -59,7 +59,7 @@ def train() -> None:
         domain_loss = drm_loss_2d_poisson_domain(model)
         model(coord_space.bndry_rand(500).requires_grad_(True))
         bndry_loss = drm_loss_2d_poisson_bndry(model)
-        loss = domain_loss + 100 * bndry_loss
+        loss: torch.Tensor = domain_loss + 100 * bndry_loss
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()

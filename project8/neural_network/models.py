@@ -18,8 +18,10 @@ class NN(nn.Module):
 
     def initialize_weights(
             self,
-            weight_init: Callable[[torch.Tensor, Any], None],
-            bias_init: Callable[[torch.Tensor, Any], None],
+            weight_init: Callable[[torch.Tensor, Any], torch.Tensor] |
+                         Callable[[torch.Tensor], torch.Tensor],
+            bias_init: Callable[[torch.Tensor, Any], torch.Tensor] | Callable[
+                [torch.Tensor], torch.Tensor],
             weight_init_kwargs: Optional[Dict[str, Any]] = None,
             bias_init_kwargs: Optional[Dict[str, Any]] = None
     ) -> None:

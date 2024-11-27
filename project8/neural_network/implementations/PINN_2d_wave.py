@@ -96,7 +96,7 @@ def train() -> None:
         bndry_loss = pinn_wave_bc(model)
         model(ic_data_loader())
         ic_loss = pinn_wave_ic(model)
-        loss = 100 * domain_loss + bndry_loss + ic_loss
+        loss: torch.Tensor = 100 * domain_loss + bndry_loss + ic_loss
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()

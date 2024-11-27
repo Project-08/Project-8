@@ -55,7 +55,7 @@ def train() -> None:
         model(coord_space.bndry_rand(500).requires_grad_(
             True))  # forward pass on boundary
         bndry_loss = pinn_bndry_loss(model)
-        loss = domain_loss + 1 * bndry_loss
+        loss: torch.Tensor = domain_loss + 1 * bndry_loss
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
