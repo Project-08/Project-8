@@ -6,15 +6,18 @@ import logging
 
 
 def source(input):
-    return torch.sin(12  * input[:, 0] * input[:, 1]).unsqueeze(1)
+    return torch.sin(12 * input[:, 0] * input[:, 1]).unsqueeze(1)
+
 
 def pinn_domain_loss(model: models.diff_NN):
     f = source(model.input)
     laplace = model.laplacian()
     return (laplace + f).pow(2).mean()
 
+
 def pinn_bndry_loss(model: models.diff_NN):
     return model.output.pow(2).mean()
+
 
 def train():
     device = utils.get_device()
@@ -31,7 +34,7 @@ def train():
     # training params
     n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]], device) # domain defined here
+    coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]], device)  # domain defined here
     tmr = utils.timer()
 
     # plot source function
@@ -44,11 +47,11 @@ def train():
     # train
     tmr.start()
     for epoch in range(n_epochs):
-        model(coord_space.rand(1000).requires_grad_(True)) # forward pass on domain
+        model(coord_space.rand(1000).requires_grad_(True))  # forward pass on domain
         domain_loss = pinn_domain_loss(model)  # loss before other forward pass
-        model(coord_space.bndry_rand(500).requires_grad_(True)) # forward pass on boundary
+        model(coord_space.bndry_rand(500).requires_grad_(True))  # forward pass on boundary
         bndry_loss = pinn_bndry_loss(model)
-        loss = domain_loss + 1* bndry_loss
+        loss = domain_loss + 1 * bndry_loss
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()

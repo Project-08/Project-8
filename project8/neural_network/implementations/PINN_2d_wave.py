@@ -10,38 +10,46 @@ def sourcefunc_A4(x, y, alpha=40):
     Ly = 5
     f = torch.zeros_like(x)
     a = [
-        [0.25*Lx, 0.25*Ly],
-        [0.25*Lx, 0.75*Ly],
-        [0.75*Lx, 0.75*Ly],
-        [0.75*Lx, 0.25*Ly]
+        [0.25 * Lx, 0.25 * Ly],
+        [0.25 * Lx, 0.75 * Ly],
+        [0.75 * Lx, 0.75 * Ly],
+        [0.75 * Lx, 0.25 * Ly]
     ]
     for i in a:
         f += torch.exp(-alpha * (x - i[0]) ** 2 - alpha * (y - i[1]) ** 2)
     return f
 
-def sourcefunc_wave(x, y, t, alpha=40, omega=4*torch.pi):
-    f = sourcefunc_A4(x, y,  alpha)
-    return f*torch.sin(omega*t)
+
+def sourcefunc_wave(x, y, t, alpha=40, omega=4 * torch.pi):
+    f = sourcefunc_A4(x, y, alpha)
+    return f * torch.sin(omega * t)
+
 
 def F(coords):
     return sourcefunc_wave(coords[:, 0], coords[:, 1], coords[:, 2]).unsqueeze(1)
 
+
 def coeffK3(x, y):
     return 1 + 0.1 * (x + y + x * y)
 
+
 def K(coords):
     return coeffK3(coords[:, 0], coords[:, 1]).unsqueeze(1)
+
 
 def pinn_wave_pde(model: models.diff_NN):
     f = F(model.input)
     residual = model.diff(2, 2) - model.laplacian() - f
     return residual.abs().mean()
 
+
 def pinn_wave_bc(model: models.diff_NN):
     return model.output.pow(2).mean()
 
+
 def pinn_wave_ic(model: models.diff_NN):
     return model.output.pow(2).mean()
+
 
 def train():
     device = utils.get_device()
@@ -59,7 +67,7 @@ def train():
     # training params
     n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    coord_space = utils.ParameterSpace([[0, 10], [0, 5], [0, 4]], device) # xyt domain defined here
+    coord_space = utils.ParameterSpace([[0, 10], [0, 5], [0, 4]], device)  # xyt domain defined here
     tmr = utils.timer()
     domain_data_loader = utils.DataLoader(
         coord_space.rand(100000), 3000, device=device,
@@ -87,12 +95,12 @@ def train():
         loss.backward()
         optimizer.step()
         if epoch % 100 == 0:
-            logging.info(f'Epoch {epoch},' 
-                  f' pde: {domain_loss.item()},'
-                  f' bc: {bndry_loss.item()},'
-                  f' ic: {ic_loss.item()},'
-                  f' total: {loss.item()}'
-            )
+            logging.info(f'Epoch {epoch},'
+                         f' pde: {domain_loss.item()},'
+                         f' bc: {bndry_loss.item()},'
+                         f' ic: {ic_loss.item()},'
+                         f' total: {loss.item()}'
+                         )
     tmr.rr()
 
     # plot output

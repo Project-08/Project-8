@@ -52,6 +52,7 @@ class Sin(nn.Module):
     def __str__(self):
         return f'Sin(multiplier={self.multiplier})'
 
+
 class FourierActivation(nn.Module):
     """Fourier series like activation function with learnable parameters"""
 

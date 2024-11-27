@@ -261,18 +261,19 @@ class ParameterSpace:
         quite slow
         """
         rand = self.rand(n)
-        s = boundary_selection.sum(1)/2
-        p = s*self.uniform_bnrdy_prob
+        s = boundary_selection.sum(1) / 2
+        p = s * self.uniform_bnrdy_prob
         p /= p.sum()
         which_dim = p.multinomial(n, replacement=True)
         which_bndry = torch.randint(0, 2, (n,), device=self.device)  # left(0) or right(1) boundary
-        which_bndry = torch.where((s==0.5)[which_dim], torch.where(boundary_selection[which_dim, 0] == 1, 0, 1), which_bndry)
+        which_bndry = torch.where((s == 0.5)[which_dim], torch.where(boundary_selection[which_dim, 0] == 1, 0, 1),
+                                  which_bndry)
         rand[torch.arange(n), which_dim] = self.domain[which_dim, which_bndry]
         return rand
 
 
 class DataLoader:
-    def __init__(self, all_data: torch.Tensor, batch_size:int, device='cpu', output_requires_grad=False, shuffle=True):
+    def __init__(self, all_data: torch.Tensor, batch_size: int, device='cpu', output_requires_grad=False, shuffle=True):
         self.all_data = all_data.to(device)
         self.n = all_data.shape[0]
         self.batch_size = batch_size
@@ -347,4 +348,3 @@ def format_time(t):
         return f'{t / 60:.2f} min'
     else:
         return f'{t / 3600:.2f} h'
-

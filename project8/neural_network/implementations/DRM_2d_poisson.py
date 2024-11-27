@@ -22,6 +22,7 @@ def drm_loss_2d_poisson_bndry(model: models.diff_NN):
     # eq 13 second term
     return model.output.pow(2).mean()
 
+
 def train():
     device = utils.get_device()
     # init model

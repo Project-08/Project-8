@@ -21,7 +21,7 @@ class NN(nn.Module):
             bias_init,
             weight_init_kwargs=None,
             bias_init_kwargs=None
-        ):
+    ):
         if weight_init_kwargs is None: weight_init_kwargs = {}
         if bias_init_kwargs is None: bias_init_kwargs = {}
         for layer in self.layers:
@@ -48,10 +48,10 @@ class NN(nn.Module):
     # rectangular FNN constructor (for PINN)
     @classmethod
     def rectangular_fnn(cls,
-            n_in: int, n_out: int,
-            width: int, depth: int,
-            act_fn: nn.Module
-        ):
+                        n_in: int, n_out: int,
+                        width: int, depth: int,
+                        act_fn: nn.Module
+                        ):
         layers = nn.ModuleList()
         layers.append(nn.Linear(n_in, width))
         layers.append(act_fn)
