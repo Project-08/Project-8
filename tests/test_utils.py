@@ -2,10 +2,12 @@ from project8.neural_network import utils
 import torch
 
 
-def count_points_on_planes(points: torch.Tensor, tolerance: float = 1e-6) -> list:
+def count_points_on_planes(points: torch.Tensor,
+                           tolerance: float = 1e-6) -> list:
     counts = []
     for i in range(points.shape[1]):
-        counts.append(torch.sum(torch.abs(points[:, points.shape[1] - i - 1]) <= tolerance).item())
+        counts.append(torch.sum(
+            torch.abs(points[:, points.shape[1] - i - 1]) <= tolerance).item())
     return counts
 
 

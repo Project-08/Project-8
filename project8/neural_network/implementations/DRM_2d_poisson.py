@@ -14,7 +14,8 @@ def drm_loss_2d_poisson_domain(model: models.diff_NN):
     # eq 13 first term
     grad = model.gradient()
     f = source(model.input)
-    return torch.mean(0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * model.output)
+    return torch.mean(
+        0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * model.output)
 
 
 def drm_loss_2d_poisson_bndry(model: models.diff_NN):
@@ -32,13 +33,16 @@ def train():
     model.to(device)
     model.double()
     model.initialize_weights(
-        torch.nn.init.xavier_uniform_, torch.nn.init.zeros_, weight_init_kwargs={'gain': 0.5}
+        torch.nn.init.xavier_uniform_,
+        torch.nn.init.zeros_,
+        weight_init_kwargs={'gain': 0.5}
     )
 
     # training params
     n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]], device)  # domain defined here
+    coord_space = utils.ParameterSpace(
+        [[-1, 2], [-1, 1]], device)
     tmr = utils.timer()
 
     # plot source function

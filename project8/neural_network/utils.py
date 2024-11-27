@@ -30,7 +30,7 @@ def get_device(override: str = None) -> str:
 def if_tensors_to_numpy(*args) -> list:
     out = []
     for arg in args:
-        if type(arg) == torch.Tensor:
+        if type(arg) is torch.Tensor:
             out.append(arg.detach().to('cpu').numpy())
         else:
             out.append(arg)
@@ -124,7 +124,8 @@ class ParameterSpace:
             center = self.center
         if amp is None:
             amp = self.amp / 3
-        rand = center + amp * torch.randn(n, self.domain.shape[0], device=self.device)
+        rand = center + amp * torch.randn(n, self.domain.shape[0],
+                                          device=self.device)
         return rand
 
     def bound_randn(self, n: int, center=None, amp=None) -> torch.Tensor:
@@ -142,7 +143,8 @@ class ParameterSpace:
         """
         normal = self.randn(n, center, amp)
         uniform = self.rand(n)
-        in_domain = torch.logical_and(torch.gt(normal, self.domain[:, 0]), torch.lt(normal, self.domain[:, 1]))
+        in_domain = torch.logical_and(torch.gt(normal, self.domain[:, 0]),
+                                      torch.lt(normal, self.domain[:, 1]))
         return torch.where(in_domain, normal, uniform)
 
     def grid(self, n: int) -> list[torch.Tensor]:
@@ -160,7 +162,8 @@ class ParameterSpace:
         """
         grids = []
         for i in self.domain:
-            grids.append(torch.linspace(i[0], i[1], n, device=self.device, dtype=torch.float64))
+            grids.append(torch.linspace(i[0], i[1], n, device=self.device,
+                                        dtype=torch.float64))
         grids.reverse()
         grids = list(torch.meshgrid(grids, indexing='ij'))
         grids.reverse()
@@ -246,7 +249,8 @@ class ParameterSpace:
         rand[torch.arange(n), which_dim] = self.domain[which_dim, which_bndry]
         return rand
 
-    def select_bndry_rand(self, n, boundary_selection: torch.Tensor) -> torch.Tensor:
+    def select_bndry_rand(self, n,
+                          boundary_selection: torch.Tensor) -> torch.Tensor:
         """
         Return a uniform random sample of size n from selected boundaries of the domain.
 
@@ -265,15 +269,18 @@ class ParameterSpace:
         p = s * self.uniform_bnrdy_prob
         p /= p.sum()
         which_dim = p.multinomial(n, replacement=True)
-        which_bndry = torch.randint(0, 2, (n,), device=self.device)  # left(0) or right(1) boundary
-        which_bndry = torch.where((s == 0.5)[which_dim], torch.where(boundary_selection[which_dim, 0] == 1, 0, 1),
+        which_bndry = torch.randint(0, 2, (n,),
+                                    device=self.device)  # left(0) or right(1) boundary
+        which_bndry = torch.where((s == 0.5)[which_dim], torch.where(
+            boundary_selection[which_dim, 0] == 1, 0, 1),
                                   which_bndry)
         rand[torch.arange(n), which_dim] = self.domain[which_dim, which_bndry]
         return rand
 
 
 class DataLoader:
-    def __init__(self, all_data: torch.Tensor, batch_size: int, device='cpu', output_requires_grad=False, shuffle=True):
+    def __init__(self, all_data: torch.Tensor, batch_size: int, device='cpu',
+                 output_requires_grad=False, shuffle=True):
         self.all_data = all_data.to(device)
         self.n = all_data.shape[0]
         self.batch_size = batch_size
@@ -293,7 +300,8 @@ class DataLoader:
             self.i = 0
             if self.do_shuffle:
                 self.all_data = self.all_data[torch.randperm(self.n)]
-        data = self.all_data[self.i * self.batch_size:(self.i + 1) * self.batch_size]
+        data = self.all_data[
+               self.i * self.batch_size:(self.i + 1) * self.batch_size]
         self.i += 1
         if self.output_requires_grad:
             return data.requires_grad_(True)

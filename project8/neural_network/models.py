@@ -22,8 +22,10 @@ class NN(nn.Module):
             weight_init_kwargs=None,
             bias_init_kwargs=None
     ):
-        if weight_init_kwargs is None: weight_init_kwargs = {}
-        if bias_init_kwargs is None: bias_init_kwargs = {}
+        if weight_init_kwargs is None:
+            weight_init_kwargs = {}
+        if bias_init_kwargs is None:
+            bias_init_kwargs = {}
         for layer in self.layers:
             if isinstance(layer, nn.Linear):
                 weight_init(layer.weight, **weight_init_kwargs)
@@ -118,7 +120,8 @@ class diff_NN(NN):
         if key not in self.__cache:
             output = self.output[:, out_dim_index].unsqueeze(1)
             self.__cache[key] = grad(
-                output, self.input, grad_outputs=torch.ones_like(output), create_graph=True
+                output, self.input, grad_outputs=torch.ones_like(output),
+                create_graph=True
             )[0]
         return self.__cache[key]
 
@@ -131,7 +134,8 @@ class diff_NN(NN):
             key += str(in_dim_indexes[i - 1])
             if key not in self.__cache:
                 self.__cache[key] = grad(
-                    diff, self.input, grad_outputs=torch.ones_like(diff), create_graph=True
+                    diff, self.input, grad_outputs=torch.ones_like(diff),
+                    create_graph=True
                 )[0]
             diff = self.__cache[key][:, in_dim_indexes[i]]
         return diff.unsqueeze(1)

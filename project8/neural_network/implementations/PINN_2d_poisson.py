@@ -28,13 +28,15 @@ def train():
     model.to(device)
     model.double()
     model.initialize_weights(
-        torch.nn.init.xavier_uniform_, torch.nn.init.zeros_, weight_init_kwargs={'gain': 0.5}
+        torch.nn.init.xavier_uniform_, torch.nn.init.zeros_,
+        weight_init_kwargs={'gain': 0.5}
     )
 
     # training params
     n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]], device)  # domain defined here
+    coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]],
+                                       device)  # domain defined here
     tmr = utils.timer()
 
     # plot source function
@@ -47,9 +49,11 @@ def train():
     # train
     tmr.start()
     for epoch in range(n_epochs):
-        model(coord_space.rand(1000).requires_grad_(True))  # forward pass on domain
+        model(coord_space.rand(1000).requires_grad_(
+            True))  # forward pass on domain
         domain_loss = pinn_domain_loss(model)  # loss before other forward pass
-        model(coord_space.bndry_rand(500).requires_grad_(True))  # forward pass on boundary
+        model(coord_space.bndry_rand(500).requires_grad_(
+            True))  # forward pass on boundary
         bndry_loss = pinn_bndry_loss(model)
         loss = domain_loss + 1 * bndry_loss
         optimizer.zero_grad()

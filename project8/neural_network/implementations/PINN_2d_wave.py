@@ -26,7 +26,8 @@ def sourcefunc_wave(x, y, t, alpha=40, omega=4 * torch.pi):
 
 
 def F(coords):
-    return sourcefunc_wave(coords[:, 0], coords[:, 1], coords[:, 2]).unsqueeze(1)
+    return sourcefunc_wave(coords[:, 0], coords[:, 1], coords[:, 2]).unsqueeze(
+        1)
 
 
 def coeffK3(x, y):
@@ -67,16 +68,18 @@ def train():
     # training params
     n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    coord_space = utils.ParameterSpace([[0, 10], [0, 5], [0, 4]], device)  # xyt domain defined here
+    coord_space = utils.ParameterSpace([[0, 10], [0, 5], [0, 4]], device)
     tmr = utils.timer()
     domain_data_loader = utils.DataLoader(
         coord_space.rand(100000), 3000, device=device,
         output_requires_grad=True)
-    bc_select = torch.tensor([[1, 1], [1, 1], [0, 0]], device=device, dtype=torch.float64)
+    bc_select = torch.tensor([[1, 1], [1, 1], [0, 0]], device=device,
+                             dtype=torch.float64)
     bc_data_loader = utils.DataLoader(
         coord_space.select_bndry_rand(100000, bc_select), 800, device=device,
         output_requires_grad=True)
-    ic_select = torch.tensor([[0, 0], [0, 0], [1, 0]], device=device, dtype=torch.float64)
+    ic_select = torch.tensor([[0, 0], [0, 0], [1, 0]], device=device,
+                             dtype=torch.float64)
     ic_data_loader = utils.DataLoader(
         coord_space.select_bndry_rand(100000, ic_select), 300, device=device,
         output_requires_grad=True)
@@ -111,8 +114,11 @@ def train():
     f = coord_space.regrid(output)[0]
 
     t_id = 0
-    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :], title='output_wave1', fig_id=2)
+    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :],
+                  title='output_wave1', fig_id=2)
     t_id = 20
-    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :], title='output_wave2', fig_id=3)
+    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :],
+                  title='output_wave2', fig_id=3)
     t_id = 49
-    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :], title='output_wave3', fig_id=4)
+    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :],
+                  title='output_wave3', fig_id=4)
