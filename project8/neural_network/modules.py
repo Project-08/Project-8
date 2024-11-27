@@ -1,10 +1,6 @@
 import torch
 import torch.nn as nn
 
-import torch
-import torch.nn as nn
-from typing import Union
-
 
 class polyReLU(nn.Module):
     """ReLU^n activation function (for DRM)"""
