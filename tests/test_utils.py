@@ -11,7 +11,7 @@ def count_points_on_planes(points: torch.Tensor,
     return counts
 
 
-def test_parameter_space():
+def test_parameter_space() -> None:
     device = utils.get_device('cpu')
     domain = [[0, 1], [0, 1], [0, 1]]
     n = 10000

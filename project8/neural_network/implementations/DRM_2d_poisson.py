@@ -5,11 +5,11 @@ import torch
 import logging
 
 
-def source(input):
+def source(input: torch.Tensor) -> torch.Tensor:
     return torch.sin(4 * input[:, 0] * input[:, 1]).unsqueeze(1)
 
 
-def drm_loss_2d_poisson_domain(model: models.diff_NN):
+def drm_loss_2d_poisson_domain(model: models.diff_NN) -> torch.Tensor:
     # sum/mean of 0.5 * (u_x^2 + u_y^2) - f*u in the domain
     # eq 13 first term
     grad = model.gradient()
@@ -18,13 +18,13 @@ def drm_loss_2d_poisson_domain(model: models.diff_NN):
         0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * model.output)
 
 
-def drm_loss_2d_poisson_bndry(model: models.diff_NN):
+def drm_loss_2d_poisson_bndry(model: models.diff_NN) -> torch.Tensor:
     # sum/mean of u^2 on the boundary
     # eq 13 second term
     return model.output.pow(2).mean()
 
 
-def train():
+def train() -> None:
     device = utils.get_device()
     # init model
     act_fn = modules.Sin(torch.pi)

@@ -2,7 +2,7 @@ from project8.neural_network import models
 import torch
 
 
-def train(model) -> float:
+def train(model: models.NN | models.diff_NN) -> float:
     device = 'cpu'
     model.to(device)
     model.initialize_weights(

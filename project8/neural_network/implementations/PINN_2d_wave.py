@@ -5,7 +5,8 @@ import torch
 import logging
 
 
-def sourcefunc_A4(x, y, alpha=40):
+def sourcefunc_A4(x: torch.Tensor, y: torch.Tensor,
+                  alpha: float = 40) -> torch.Tensor:
     Lx = 10
     Ly = 5
     f = torch.zeros_like(x)
@@ -20,39 +21,41 @@ def sourcefunc_A4(x, y, alpha=40):
     return f
 
 
-def sourcefunc_wave(x, y, t, alpha=40, omega=4 * torch.pi):
+def sourcefunc_wave(x: torch.Tensor, y: torch.Tensor, t: torch.Tensor,
+                    alpha: float = 40,
+                    omega: float = 4 * torch.pi) -> torch.Tensor:
     f = sourcefunc_A4(x, y, alpha)
     return f * torch.sin(omega * t)
 
 
-def F(coords):
+def F(coords: torch.Tensor) -> torch.Tensor:
     return sourcefunc_wave(coords[:, 0], coords[:, 1], coords[:, 2]).unsqueeze(
         1)
 
 
-def coeffK3(x, y):
+def coeffK3(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return 1 + 0.1 * (x + y + x * y)
 
 
-def K(coords):
+def K(coords: torch.Tensor) -> torch.Tensor:
     return coeffK3(coords[:, 0], coords[:, 1]).unsqueeze(1)
 
 
-def pinn_wave_pde(model: models.diff_NN):
+def pinn_wave_pde(model: models.diff_NN) -> torch.Tensor:
     f = F(model.input)
     residual = model.diff(2, 2) - model.laplacian() - f
     return residual.abs().mean()
 
 
-def pinn_wave_bc(model: models.diff_NN):
+def pinn_wave_bc(model: models.diff_NN) -> torch.Tensor:
     return model.output.pow(2).mean()
 
 
-def pinn_wave_ic(model: models.diff_NN):
+def pinn_wave_ic(model: models.diff_NN) -> torch.Tensor:
     return model.output.pow(2).mean()
 
 
-def train():
+def train() -> None:
     device = utils.get_device()
     # init model
     act_fn = modules.FourierActivation(64)

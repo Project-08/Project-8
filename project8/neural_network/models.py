@@ -3,25 +3,26 @@ import torch.nn as nn
 from torch.autograd import grad
 from . import modules as mod
 import warnings
+from typing import Callable, Dict, Any, Optional
 
 
 class NN(nn.Module):
-    def __init__(self, layers: nn.ModuleList):
+    def __init__(self, layers: nn.ModuleList) -> None:
         super().__init__()
-        self.layers = layers
+        self.layers: nn.ModuleList = layers
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         for layer in self.layers:
             x = layer(x)
         return x
 
     def initialize_weights(
             self,
-            weight_init,
-            bias_init,
-            weight_init_kwargs=None,
-            bias_init_kwargs=None
-    ):
+            weight_init: Callable,
+            bias_init: Callable,
+            weight_init_kwargs: Optional[Dict[str, Any]] = None,
+            bias_init_kwargs: Optional[Dict[str, Any]] = None
+    ) -> None:
         if weight_init_kwargs is None:
             weight_init_kwargs = {}
         if bias_init_kwargs is None:
@@ -36,24 +37,22 @@ class NN(nn.Module):
                         weight_init(sub_layer.weight, **weight_init_kwargs)
                         bias_init(sub_layer.bias, **bias_init_kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         out = ''
         for layer in self.layers:
             out = out + str(layer) + '\n'
         return out
 
-    # no NN constructor
     @classmethod
-    def empty(cls):
+    def empty(cls) -> 'NN':
         return cls(nn.ModuleList())
 
-    # rectangular FNN constructor (for PINN)
     @classmethod
     def rectangular_fnn(cls,
                         n_in: int, n_out: int,
                         width: int, depth: int,
                         act_fn: nn.Module
-                        ):
+                        ) -> 'NN':
         layers = nn.ModuleList()
         layers.append(nn.Linear(n_in, width))
         layers.append(act_fn)
@@ -63,13 +62,12 @@ class NN(nn.Module):
         layers.append(nn.Linear(width, n_out))
         return cls(layers)
 
-    # DRM NN constructor
     @classmethod
     def drm(cls,
             dim_in: int, dim_out: int,
             width: int, n_blocks: int,
             act_fn: nn.Module = mod.polyReLU(3),
-            n_linear_drm: int = 2):
+            n_linear_drm: int = 2) -> 'NN':
         layers = nn.ModuleList()
         if dim_in != width:
             layers.append(nn.Linear(dim_in, width))
@@ -98,12 +96,12 @@ class diff_NN(NN):
     (e.g. 0diff01 is grad(u_xy))
     """
 
-    def __init__(self, layers: nn.ModuleList):
+    def __init__(self, layers: nn.ModuleList) -> None:
         super().__init__(layers)
-        self.input = None
-        self.output = None
-        # self.use_cache = True
-        self.__cache = {}  # only access cache through methods
+        self.input: Optional[torch.Tensor] = None
+        self.output: Optional[torch.Tensor] = None
+        self.__cache: Dict[
+            str, torch.Tensor] = {}  # only access cache through methods
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         self.__cache = {}  # reset cached differences
@@ -117,7 +115,7 @@ class diff_NN(NN):
         e.g. with derivatives wrt to u*v with u and v being outputs."""
         self.output = torch.cat((self.output, cols), 1)
 
-    def gradient(self, out_dim_index=0) -> torch.Tensor:
+    def gradient(self, out_dim_index: int = 0) -> torch.Tensor:
         """Returns gradient vector of the last output wrt last input"""
         key = str(out_dim_index) + 'diff'
         if key not in self.__cache:
@@ -128,7 +126,8 @@ class diff_NN(NN):
             )[0]
         return self.__cache[key]
 
-    def diff(self, *in_dim_indexes: int, out_dim_index=0) -> torch.Tensor:
+    def diff(self, *in_dim_indexes: int,
+             out_dim_index: int = 0) -> torch.Tensor:
         """Main method for getting partial derivatives.
         args are dimension indexes, e.g. diff(0, 1) is u_xy."""
         diff = self.gradient(out_dim_index)[:, in_dim_indexes[0]]
@@ -159,7 +158,7 @@ class diff_NN(NN):
         else:
             raise Exception('Output shape must be the same as input shape')
 
-    def laplacian(self, out_dim_index=0) -> torch.Tensor:
+    def laplacian(self, out_dim_index: int = 0) -> torch.Tensor:
         """Returns laplacian of output,
         but the entire hessian is computed and cached.
         Not self.divergence(self.gradient(out_dim_index)),

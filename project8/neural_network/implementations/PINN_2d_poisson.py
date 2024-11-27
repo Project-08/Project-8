@@ -5,21 +5,21 @@ import torch
 import logging
 
 
-def source(input):
+def source(input: torch.Tensor) -> torch.Tensor:
     return torch.sin(12 * input[:, 0] * input[:, 1]).unsqueeze(1)
 
 
-def pinn_domain_loss(model: models.diff_NN):
+def pinn_domain_loss(model: models.diff_NN) -> torch.Tensor:
     f = source(model.input)
     laplace = model.laplacian()
     return (laplace + f).pow(2).mean()
 
 
-def pinn_bndry_loss(model: models.diff_NN):
+def pinn_bndry_loss(model: models.diff_NN) -> torch.Tensor:
     return model.output.pow(2).mean()
 
 
-def train():
+def train() -> None:
     device = utils.get_device()
     # init model
     act_fn = modules.FourierActivation(64)

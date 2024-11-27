@@ -3,35 +3,35 @@ from project8.neural_network import utils
 import torch
 
 
-def f(x, y):
+def f(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return x ** 3 + 3 * y ** 2 + 2 * x * y + 2 * y ** 3 + 3 * x + 2
 
 
-def dfdx(x, y):
+def dfdx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return 3 * x ** 2 + 2 * y + 3
 
 
-def dfdy(x, y):
+def dfdy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return 6 * y + 2 * x + 6 * y ** 2
 
 
-def d2fdxx(x, y):
+def d2fdxx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return 6 * x
 
 
-def d3fdxxx(x, y):
+def d3fdxxx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return 6 + x * 0
 
 
-def d2fdyy(x, y):
+def d2fdyy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return 6 + 12 * y
 
 
-def d2fdxy(x, y):
+def d2fdxy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return x * 0 + 2
 
 
-def d2fdyx(x, y):
+def d2fdyx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return x * 0 + 2
 
 
