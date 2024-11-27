@@ -4,15 +4,15 @@ import torch
 
 
 def f(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    return x ** 3 + 3 * y ** 2 + 2 * x * y + 2 * y ** 3 + 3 * x + 2
+    return x.pow(3) + 3 * y.pow(2) + 2 * x * y + 2 * y.pow(3) + 3 * x + 2
 
 
 def dfdx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    return 3 * x ** 2 + 2 * y + 3
+    return 3 * x.pow(2) + 2 * y + 3
 
 
 def dfdy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    return 6 * y + 2 * x + 6 * y ** 2
+    return 6 * y + 2 * x + 6 * y.pow(2)
 
 
 def d2fdxx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

@@ -34,7 +34,7 @@ def train() -> None:
 
     # training params
     n_epochs = 5000
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)  # type: ignore
     coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]],
                                        device)  # domain defined here
     tmr = utils.Timer()

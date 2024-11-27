@@ -70,7 +70,7 @@ def train() -> None:
 
     # training params
     n_epochs = 5000
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)  # type: ignore
     coord_space = utils.ParameterSpace([[0, 10], [0, 5], [0, 4]], device)
     tmr = utils.Timer()
     domain_data_loader = utils.DataLoader(

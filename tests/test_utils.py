@@ -1,9 +1,10 @@
 from project8.neural_network import utils
 import torch
+from typing import List
 
 
 def count_points_on_planes(points: torch.Tensor,
-                           tolerance: float = 1e-6) -> list:
+                           tolerance: float = 1e-6) -> List[int | float]:
     counts = []
     for i in range(points.shape[1]):
         counts.append(torch.sum(
