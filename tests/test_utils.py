@@ -17,7 +17,7 @@ def test_parameter_space() -> None:
     n = 10000
     space = utils.ParameterSpace(domain, device)
     bound_sel = torch.tensor([[1, 1], [1, 1], [0, 0]], device=device)
-    tmr = utils.timer()
+    tmr = utils.Timer()
     tmr.start()
     loc = space.select_bndry_rand(n, bound_sel)
     tmr.stop()

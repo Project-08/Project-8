@@ -72,7 +72,7 @@ def train() -> None:
     n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     coord_space = utils.ParameterSpace([[0, 10], [0, 5], [0, 4]], device)
-    tmr = utils.timer()
+    tmr = utils.Timer()
     domain_data_loader = utils.DataLoader(
         coord_space.rand(100000), 3000, device=device,
         output_requires_grad=True)

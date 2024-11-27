@@ -37,7 +37,7 @@ def train() -> None:
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]],
                                        device)  # domain defined here
-    tmr = utils.timer()
+    tmr = utils.Timer()
 
     # plot source function
     f_loc = coord_space.fgrid(300)

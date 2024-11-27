@@ -7,7 +7,7 @@ from warnings import warn
 import time
 import os
 import logging
-from typing import Optional, List, Iterable
+from typing import Optional, List, Iterable, Any, Union
 
 plot_folder = os.path.join(
     os.path.dirname(
@@ -29,19 +29,21 @@ def get_device(override: str = '') -> str:
     return device
 
 
-def if_tensors_to_numpy(*args: any) -> list:
+def if_tensors_to_numpy(*args: Any) -> List[np.ndarray]:
     out = []
     for arg in args:
-        if type(arg) is torch.Tensor:
+        if isinstance(arg, torch.Tensor):
             out.append(arg.detach().to('cpu').numpy())
-        else:
+        elif isinstance(arg, np.ndarray):
             out.append(arg)
+        else:
+            out.append(np.array(arg))
     return out
 
 
-def plot_2d(x: torch.Tensor | np.ndarray | list,
-            y: torch.Tensor | np.ndarray | list,
-            f: torch.Tensor | np.ndarray | list, title: str, fig_id=0,
+def plot_2d(x: Union[torch.Tensor, np.ndarray],
+            y: Union[torch.Tensor, np.ndarray],
+            f: Union[torch.Tensor, np.ndarray], title: str, fig_id=0,
             filename: str = '') -> None:
     x, y, f = if_tensors_to_numpy(x, y, f)
     if filename == '':
@@ -60,16 +62,16 @@ def plot_2d(x: torch.Tensor | np.ndarray | list,
     plt.savefig(plot_folder + '/' + filename)
 
 
-def plot_plane(x: torch.Tensor | np.ndarray | list,
-               y: torch.Tensor | np.ndarray | list,
-               f: torch.Tensor | np.ndarray | list, title: str, fig_id=0,
+def plot_plane(x: Union[torch.Tensor, np.ndarray],
+               y: Union[torch.Tensor, np.ndarray],
+               f: Union[torch.Tensor, np.ndarray], title: str, fig_id=0,
                filename: str = '') -> None:
     x, y, f = if_tensors_to_numpy(x, y, f)
     if filename is None:
         filename = title + '.png'
     fig = plt.figure(fig_id)
     plt.clf()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = (fig.add_subplot(111, projection='3d'))
     ax.plot_surface(x, y, f, cmap='viridis')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
@@ -79,7 +81,8 @@ def plot_plane(x: torch.Tensor | np.ndarray | list,
 
 
 class ParameterSpace:
-    def __init__(self, domain: Iterable, device: str = 'cpu') -> None:
+    def __init__(self, domain: Iterable[Iterable[float]],
+                 device: str = 'cpu') -> None:
         self.domain = torch.tensor(domain, dtype=torch.float64, device=device)
         self.device = device
         self.center = (self.domain[:, 1] + self.domain[:, 0]) / 2
@@ -201,7 +204,7 @@ class DataLoader:
         return data.requires_grad_(self.output_requires_grad)
 
 
-class timer:
+class Timer:
     """Simple timer class"""
 
     def __init__(self) -> None:
@@ -232,7 +235,10 @@ class timer:
         self.reset()
 
     def reset(self) -> None:
-        self.__init__()
+        self.t_start = 0
+        self.t_end = 0
+        self.t_elapsed = 0
+        self.running = False
 
 
 def format_time(t: float) -> str:
