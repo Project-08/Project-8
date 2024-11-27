@@ -3,7 +3,7 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D # type: ignore
 from warnings import warn
 import time
 import os
@@ -30,7 +30,7 @@ def get_device(override: str = '') -> str:
     return device
 
 
-def if_tensors_to_numpy(*args: Any) -> List[np.ndarray[Any]]:
+def if_tensors_to_numpy(*args: Any) -> List[np.ndarray[Any, Any]]:
     out = []
     for arg in args:
         if isinstance(arg, torch.Tensor):
@@ -42,9 +42,9 @@ def if_tensors_to_numpy(*args: Any) -> List[np.ndarray[Any]]:
     return out
 
 
-def plot_2d(x: Union[torch.Tensor, np.ndarray[Any]],
-            y: Union[torch.Tensor, np.ndarray[Any]],
-            f: Union[torch.Tensor, np.ndarray[Any]], title: str,
+def plot_2d(x: Union[torch.Tensor, np.ndarray[Any, Any]],
+            y: Union[torch.Tensor, np.ndarray[Any, Any]],
+            f: Union[torch.Tensor, np.ndarray[Any, Any]], title: str,
             fig_id: int = 0,
             filename: str = '') -> None:
     x, y, f = if_tensors_to_numpy(x, y, f)
@@ -64,9 +64,9 @@ def plot_2d(x: Union[torch.Tensor, np.ndarray[Any]],
     plt.savefig(plot_folder + '/' + filename)
 
 
-def plot_plane(x: Union[torch.Tensor, np.ndarray[Any]],
-               y: Union[torch.Tensor, np.ndarray[Any]],
-               f: Union[torch.Tensor, np.ndarray[Any]], title: str,
+def plot_plane(x: Union[torch.Tensor, np.ndarray[Any, Any]],
+               y: Union[torch.Tensor, np.ndarray[Any, Any]],
+               f: Union[torch.Tensor, np.ndarray[Any, Any]], title: str,
                fig_id: int = 0,
                filename: str = '') -> None:
     x, y, f = if_tensors_to_numpy(x, y, f)
