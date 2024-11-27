@@ -12,7 +12,7 @@ def train(model: models.NN | models.diff_NN) -> float:
     x = torch.linspace(0, 2 * 3.14159, 128).to(device).unsqueeze(1)
     target = torch.sin(2 * x)
     n_epochs = 5000
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)  # type: ignore
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     criterion = torch.nn.MSELoss()
     best = 1e10
     for epoch in range(n_epochs):
