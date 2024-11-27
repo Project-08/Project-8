@@ -1,11 +1,21 @@
 """This file contains some convenience functions for the project"""
 
 import torch
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as anim
 from warnings import warn
 import time
+import os
+import logging
+
+plot_folder = os.path.join(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__)
+            )
+        )
+    ), 'plots')
+logging.info(f'plot_folder: {plot_folder}')
 
 
 def get_device(override: str = None) -> str:
@@ -42,7 +52,7 @@ def plot_2d(x, y, f, title, fig_id=0, filename=None) -> None:
         plt.colorbar(orientation='vertical')
     else:
         plt.colorbar(orientation='horizontal')
-    plt.savefig('plots/' + filename)
+    plt.savefig(plot_folder + '/' + filename)
 
 
 def plot_plane(x, y, f, title, fig_id=0, filename=None) -> None:
@@ -57,7 +67,7 @@ def plot_plane(x, y, f, title, fig_id=0, filename=None) -> None:
     ax.set_ylabel('y')
     ax.set_zlabel('f')
     ax.set_title(title)
-    plt.savefig('plots/' + filename)
+    plt.savefig(plot_folder + '/' + filename)
 
 
 class ParameterSpace:

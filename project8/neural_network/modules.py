@@ -51,3 +51,19 @@ class Sin(nn.Module):
 
     def __str__(self):
         return f'Sin(multiplier={self.multiplier})'
+
+class FourierActivation(nn.Module):
+    """Fourier series like activation function with learnable parameters"""
+
+    def __init__(self, width: int):
+        super().__init__()
+        self.width = width
+        self.amps = nn.Parameter(torch.randn(1, width))
+        self.freqs = nn.Parameter(torch.randn(1, width))
+        self.phases = nn.Parameter(torch.randn(1, width))
+
+    def forward(self, x):
+        return torch.sin(self.freqs * x + self.phases) * self.amps
+
+    def __str__(self):
+        return self.__class__.__name__ + '(width=' + str(self.width) + ')'

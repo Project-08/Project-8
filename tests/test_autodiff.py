@@ -1,8 +1,6 @@
-from project8 import neural_network
+from project8.neural_network import models
+from project8.neural_network import utils
 import torch
-import matplotlib.pyplot as plt
-
-import pytest
 
 def f(x, y):
     return x**3 + 3*y**2 + 2*x*y + 2*y**3 + 3*x + 2
@@ -28,9 +26,9 @@ def d2fdxy(x, y):
 def d2fdyx(x, y):
     return x*0 + 2
 
-def def_model() -> neural_network.models.diff_NN:
-    model = neural_network.models.diff_NN.empty()
-    coord_space = neural_network.utils.ParameterSpace([[-1, 1], [-1, 1]], 'cpu')
+def def_model() -> models.diff_NN:
+    model = models.diff_NN.empty()
+    coord_space = utils.ParameterSpace([[-1, 1], [-1, 1]], 'cpu')
     grid = coord_space.fgrid(10).requires_grad_(True)
     model.input = grid
     x = grid[:, 0].unsqueeze(1)

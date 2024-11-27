@@ -59,7 +59,7 @@ def source_2(x, y):
 
 
 def source3(x, y):
-    return np.sin(4 * x * y)
+    return np.sin(12 * x * y)
 
 
 f = source3(x, y)

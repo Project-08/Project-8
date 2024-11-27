@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.autograd import grad
 from . import modules as mod
 import warnings
 
@@ -14,7 +15,13 @@ class NN(nn.Module):
             x = layer(x)
         return x
 
-    def initialize_weights(self, weight_init, bias_init, weight_init_kwargs=None, bias_init_kwargs=None):
+    def initialize_weights(
+            self,
+            weight_init,
+            bias_init,
+            weight_init_kwargs=None,
+            bias_init_kwargs=None
+        ):
         if weight_init_kwargs is None: weight_init_kwargs = {}
         if bias_init_kwargs is None: bias_init_kwargs = {}
         for layer in self.layers:
@@ -40,7 +47,11 @@ class NN(nn.Module):
 
     # rectangular FNN constructor (for PINN)
     @classmethod
-    def rectangular_fnn(cls, n_in: int, n_out: int, width: int, depth: int, act_fn: nn.Module):
+    def rectangular_fnn(cls,
+            n_in: int, n_out: int,
+            width: int, depth: int,
+            act_fn: nn.Module
+        ):
         layers = nn.ModuleList()
         layers.append(nn.Linear(n_in, width))
         layers.append(act_fn)
@@ -61,7 +72,9 @@ class NN(nn.Module):
         if dim_in != width:
             layers.append(nn.Linear(dim_in, width))
         if dim_in < width:
-            warnings.warn('padding input with zeros when n_in<width is not implemented (described in paper)')
+            warnings.warn(
+                'padding input with zeros when n_in<width is not implemented'
+            )
         for i in range(n_blocks):
             layers.append(mod.DRM_block(width, act_fn, n_linear_drm))
         layers.append(nn.Linear(width, dim_out))
@@ -104,7 +117,7 @@ class diff_NN(NN):
         key = str(out_dim_index) + 'diff'
         if key not in self.__cache:
             output = self.output[:, out_dim_index].unsqueeze(1)
-            self.__cache[key] = torch.autograd.grad(
+            self.__cache[key] = grad(
                 output, self.input, grad_outputs=torch.ones_like(output), create_graph=True
             )[0]
         return self.__cache[key]
@@ -117,7 +130,7 @@ class diff_NN(NN):
         for i in range(1, len(in_dim_indexes)):
             key += str(in_dim_indexes[i - 1])
             if key not in self.__cache:
-                self.__cache[key] = torch.autograd.grad(
+                self.__cache[key] = grad(
                     diff, self.input, grad_outputs=torch.ones_like(diff), create_graph=True
                 )[0]
             diff = self.__cache[key][:, in_dim_indexes[i]]
@@ -129,12 +142,14 @@ class diff_NN(NN):
         if vector.shape == self.input.shape:
             div = torch.zeros_like(self.input[:, 0])
             for i in range(self.input.shape[1]):
-                div += torch.autograd.grad(
-                    vector[:, i], self.input, grad_outputs=torch.ones_like(vector[:, i]), create_graph=True
+                div += grad(
+                    vector[:, i], self.input,
+                    grad_outputs=torch.ones_like(vector[:, i]),
+                    create_graph=True
                 )[0][:, i]
             return div.unsqueeze(1)
         else:
-            raise Exception('Output shape must be the same as model input shape')
+            raise Exception('Output shape must be the same as input shape')
 
     def laplacian(self, out_dim_index=0) -> torch.Tensor:
         """Returns laplacian of output, but the entire hessian is computed and cached.
