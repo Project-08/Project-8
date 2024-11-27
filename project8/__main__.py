@@ -1,8 +1,10 @@
 import argparse
 import logging
 
+import pyamgx
+
 from .bench.sparse import bench_solve_tri
-from .sparse import CuPySolve, CuSparseTriSolve, TriSolve
+from .sparse import AMGXSolve, CuPySolve, CuSPARSETriSolve, TriSolve
 
 
 def main() -> None:
@@ -34,15 +36,19 @@ def main() -> None:
             for solver in args.solvers:
                 match solver:
                     case "cuSPARSE":
-                        solvers.append(CuSparseTriSolve())
+                        solvers.append(CuSPARSETriSolve())
                     case "CuPy":
                         solvers.append(CuPySolve())
+                    case "AMGX":
+                        solvers.append(AMGXSolve())
 
             bench_solve_tri(range(args.min, args.max,
                                   (args.max - args.min) // args.steps),
                             solvers=solvers,
                             attempts=args.attempts,
                             plot=args.plot)
+
+    pyamgx.finalize()
 
 
 if __name__ == "__main__":

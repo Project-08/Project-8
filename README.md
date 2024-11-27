@@ -2,7 +2,9 @@
 Neural Networks for Partial Differential Equations
 
 ## Installing & Running
-To install the project8 package, along with development dependencies, run
+To install the project8 package, along with development dependencies, install the [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) [AMGX](https://github.com/NVIDIA/AMGX) and [pyamgx](https://github.com/shwina/pyamgx).
+
+Then, run
 ```sh
 pip install '.[dev]'
 ```
