@@ -76,13 +76,16 @@ class ParameterSpace:
         Initialize the float_parameter_space class.
 
         Parameters:
-        domain (iter): A 2D tensor of floats, for constant parameters, use [a, a].
+        domain (iter): A 2D tensor of floats, for constant parameters,
+        use [a, a].
         device (str): The device to use ('cpu' or 'cuda').
 
         Note:
-        Most methods output a tensor of float64 ready to be used in models, in shape (n, d).
+        Most methods output a tensor of float64 ready to be used in models,
+         in shape (n, d).
         All methods are generally a lot slower on GPU than on CPU,
-        but still faster than having this class on CPU and moving output to GPU.
+        but still faster than having this class on CPU
+        and moving output to GPU.
         """
         self.domain = torch.tensor(domain, dtype=torch.float64, device=device)
         self.device = device
@@ -158,7 +161,8 @@ class ParameterSpace:
         list[torch.Tensor]: A list of tensors representing the grid.
 
         Note:
-        The grid is lexicographically ordered (first dimension changes fastest).
+        The grid is lexicographically ordered
+        (first dimension changes fastest).
         """
         grids = []
         for i in self.domain:
@@ -180,7 +184,8 @@ class ParameterSpace:
         torch.Tensor: A tensor of shape (n^d, d) with the flattened grid.
 
         Note:
-        The grid is lexicographically ordered (first dimension changes fastest).
+        The grid is lexicographically ordered
+        (first dimension changes fastest).
         """
         return torch.stack(self.grid(n)).reshape(self.size, -1).T
 
@@ -235,31 +240,36 @@ class ParameterSpace:
 
     def bndry_rand(self, n) -> torch.Tensor:
         """
-        Return a uniform random sample of size n from the boundary of the domain.
+        Return a uniform random sample of size n from
+        the boundary of the domain.
 
         Parameters:
         n (int): The number of samples to generate.
 
         Returns:
-        torch.Tensor: A tensor of shape (n, d) with uniform random samples from the boundary.
+        torch.Tensor: A tensor of shape (n, d) with uniform random samples
+         from the boundary.
         """
         rand = self.rand(n)
         which_dim = self.uniform_bnrdy_prob.multinomial(n, replacement=True)
-        which_bndry = torch.randint(0, 2, (n,))  # left(0) or right(1) boundary
+        which_bndry = torch.randint(0, 2, (n,))
         rand[torch.arange(n), which_dim] = self.domain[which_dim, which_bndry]
         return rand
 
     def select_bndry_rand(self, n,
                           boundary_selection: torch.Tensor) -> torch.Tensor:
         """
-        Return a uniform random sample of size n from selected boundaries of the domain.
+        Return a uniform random sample of size n from selected boundaries of
+        the domain.
 
         Parameters:
         n (int): The number of samples to generate.
-        boundary_selection (torch.Tensor): A tensor indicating which boundaries to select.
+        boundary_selection (torch.Tensor): A tensor indicating which
+        boundaries to select.
 
         Returns:
-        torch.Tensor: A tensor of shape (n, d) with uniform random samples from the selected boundaries.
+        torch.Tensor: A tensor of shape (n, d) with uniform random samples
+        from the selected boundaries.
 
         Note:
         quite slow
@@ -270,7 +280,7 @@ class ParameterSpace:
         p /= p.sum()
         which_dim = p.multinomial(n, replacement=True)
         which_bndry = torch.randint(0, 2, (n,),
-                                    device=self.device)  # left(0) or right(1) boundary
+                                    device=self.device)
         which_bndry = torch.where((s == 0.5)[which_dim], torch.where(
             boundary_selection[which_dim, 0] == 1, 0, 1),
                                   which_bndry)

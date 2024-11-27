@@ -88,12 +88,14 @@ class diff_NN(NN):
     Neural network with differential operators implemented,
     for convenience and efficiency writing pinn and drm loss functions.
 
-    Differential operations are cached for efficiency, cache is reset at each forward pass.
+    Differential operations are cached for efficiency,
+     cache is reset at each forward pass.
 
     Dimension indexes (0 indexed) are used for partial derivatives.
     convention: last dimension is time, so xyzt, or xyz, or xyt etc.
 
-    cache keys: out_dim_indexes + 'name' + in_dim_indexes (e.g. 0diff01 is grad(u_xy))
+    cache keys: out_dim_indexes + 'name' + in_dim_indexes
+    (e.g. 0diff01 is grad(u_xy))
     """
 
     def __init__(self, layers: nn.ModuleList):
@@ -111,7 +113,8 @@ class diff_NN(NN):
 
     def output_append(self, cols: torch.Tensor) -> None:
         """Appends a new column to the output tensor.
-        Needed for more complex pde's e.g. with derivatives wrt to u*v with u and v being outputs."""
+        Needed for more complex pde's
+        e.g. with derivatives wrt to u*v with u and v being outputs."""
         self.output = torch.cat((self.output, cols), 1)
 
     def gradient(self, out_dim_index=0) -> torch.Tensor:
@@ -141,7 +144,8 @@ class diff_NN(NN):
         return diff.unsqueeze(1)
 
     def divergence(self, vector: torch.Tensor) -> torch.Tensor:
-        """Returns divergence of vector. Vector must be calculated from model input.
+        """Returns divergence of vector.
+        Vector must be calculated from model input.
         Caching is not supported as function input can be anything"""
         if vector.shape == self.input.shape:
             div = torch.zeros_like(self.input[:, 0])
@@ -156,12 +160,16 @@ class diff_NN(NN):
             raise Exception('Output shape must be the same as input shape')
 
     def laplacian(self, out_dim_index=0) -> torch.Tensor:
-        """Returns laplacian of output, but the entire hessian is computed and cached.
-        Not self.divergence(self.gradient(out_dim_index)), as that doesn't cache second diffs."""
+        """Returns laplacian of output,
+        but the entire hessian is computed and cached.
+        Not self.divergence(self.gradient(out_dim_index)),
+        as that doesn't cache second diffs."""
         key = str(out_dim_index) + 'laplacian'
         if key not in self.__cache:
             laplacian_u = torch.zeros_like(self.output)
             for i in range(self.input.shape[1]):
-                laplacian_u += self.diff(i, i, out_dim_index=out_dim_index)
+                laplacian_u += self.diff(
+                    i, i, out_dim_index=out_dim_index
+                )
             self.__cache[key] = laplacian_u
         return self.__cache[key]
