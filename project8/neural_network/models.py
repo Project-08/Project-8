@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.autograd import grad
 from . import modules as mod
 import warnings
-from typing import Callable, Dict, Any, Optional
+from typing import Callable, Dict, Any, Optional, Self
 
 
 class NN(nn.Module):
@@ -18,8 +18,8 @@ class NN(nn.Module):
 
     def initialize_weights(
             self,
-            weight_init: Callable,
-            bias_init: Callable,
+            weight_init: Callable[[torch.Tensor, Any], None],
+            bias_init: Callable[[torch.Tensor, Any], None],
             weight_init_kwargs: Optional[Dict[str, Any]] = None,
             bias_init_kwargs: Optional[Dict[str, Any]] = None
     ) -> None:
@@ -44,7 +44,7 @@ class NN(nn.Module):
         return out
 
     @classmethod
-    def empty(cls) -> 'NN':
+    def empty(cls) -> Self:
         return cls(nn.ModuleList())
 
     @classmethod
@@ -52,7 +52,7 @@ class NN(nn.Module):
                         n_in: int, n_out: int,
                         width: int, depth: int,
                         act_fn: nn.Module
-                        ) -> 'NN':
+                        ) -> Self:
         layers = nn.ModuleList()
         layers.append(nn.Linear(n_in, width))
         layers.append(act_fn)
@@ -67,7 +67,7 @@ class NN(nn.Module):
             dim_in: int, dim_out: int,
             width: int, n_blocks: int,
             act_fn: nn.Module = mod.polyReLU(3),
-            n_linear_drm: int = 2) -> 'NN':
+            n_linear_drm: int = 2) -> Self:
         layers = nn.ModuleList()
         if dim_in != width:
             layers.append(nn.Linear(dim_in, width))
@@ -98,8 +98,8 @@ class diff_NN(NN):
 
     def __init__(self, layers: nn.ModuleList) -> None:
         super().__init__(layers)
-        self.input: Optional[torch.Tensor] = None
-        self.output: Optional[torch.Tensor] = None
+        self.input: torch.Tensor = torch.Tensor()
+        self.output: torch.Tensor = torch.Tensor()
         self.__cache: Dict[
             str, torch.Tensor] = {}  # only access cache through methods
 
