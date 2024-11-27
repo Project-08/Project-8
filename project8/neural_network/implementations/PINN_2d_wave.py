@@ -98,7 +98,7 @@ def train() -> None:
         ic_loss = pinn_wave_ic(model)
         loss: torch.Tensor = 100 * domain_loss + bndry_loss + ic_loss
         optimizer.zero_grad()
-        loss.backward()
+        loss.backward()  # type: ignore
         optimizer.step()
         if epoch % 100 == 0:
             logging.info(f'Epoch {epoch},'

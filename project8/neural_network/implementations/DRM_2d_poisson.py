@@ -61,7 +61,7 @@ def train() -> None:
         bndry_loss = drm_loss_2d_poisson_bndry(model)
         loss: torch.Tensor = domain_loss + 100 * bndry_loss
         optimizer.zero_grad()
-        loss.backward()
+        loss.backward()  # type: ignore
         optimizer.step()
         if epoch % 100 == 0:
             logging.info(

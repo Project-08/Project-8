@@ -19,10 +19,10 @@ class NN(nn.Module):
     def initialize_weights(
             self,
             weight_init: Callable[
-                [torch.Tensor, Any], torch.Tensor
-            ] | Callable[
-                [torch.Tensor], torch.Tensor
-            ],
+                             [torch.Tensor, Any], torch.Tensor
+                         ] | Callable[
+                             [torch.Tensor], torch.Tensor
+                         ],
             bias_init: Callable[[torch.Tensor, Any], torch.Tensor] | Callable[
                 [torch.Tensor], torch.Tensor],
             weight_init_kwargs: Optional[Dict[str, Any]] = None,
@@ -34,13 +34,15 @@ class NN(nn.Module):
             bias_init_kwargs = {}
         for layer in self.layers:
             if isinstance(layer, nn.Linear):
-                weight_init(layer.weight, **weight_init_kwargs)
-                bias_init(layer.bias, **bias_init_kwargs)
+                weight_init(layer.weight, **weight_init_kwargs)  # type: ignore
+                bias_init(layer.bias, **bias_init_kwargs)  # type: ignore
             if isinstance(layer, mod.DRM_block):
                 for sub_layer in layer.layers:
                     if isinstance(sub_layer, nn.Linear):
-                        weight_init(sub_layer.weight, **weight_init_kwargs)
-                        bias_init(sub_layer.bias, **bias_init_kwargs)
+                        weight_init(sub_layer.weight,
+                                    **weight_init_kwargs)  # type: ignore
+                        bias_init(sub_layer.bias,
+                                  **bias_init_kwargs)  # type: ignore
 
     def __str__(self) -> str:
         out = ''
