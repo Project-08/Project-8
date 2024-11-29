@@ -99,8 +99,8 @@ class CuPySolve(Solve, TriSolve):
                                        spmatrix_size(a)))
 
 
-class AMGXSolve(Solve, TriSolve):
-    """Solver of Ax=b systems using AMGX."""
+class AmgXSolve(Solve, TriSolve):
+    """Solver of Ax=b systems using AmgX."""
 
     def __init__(self) -> None:
         self._cfg = pyamgx.Config().create_from_dict({

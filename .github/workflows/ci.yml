@@ -4,15 +4,14 @@ on:
   push:
     branches:
       - main
+      - wgraj-amgx
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/<owner>/<image>:<tag>
-    credentials:
-      username: ${{ secrets.GHCR_USERNAME }}
-      password: ${{ secrets.GHCR_TOKEN }}
+    container:
+      image: ghcr.io/project-08/project-8:latest
     env:
       NOGPU: 1
     steps:

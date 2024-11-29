@@ -3,7 +3,7 @@ import os
 import cupy as cp
 import pytest
 
-from project8.sparse import AMGXSolve, CuPySolve, CuSPARSETriSolve
+from project8.sparse import AmgXSolve, CuPySolve, CuSPARSETriSolve
 
 
 @pytest.mark.skipif(os.getenv('NOGPU') is not None,
@@ -34,6 +34,6 @@ def test_amgx_tri_solve() -> None:
     d = 2 * cp.ones(4)
     dlu = -1 * cp.ones(3)
     b = cp.ones(4)
-    solver = AMGXSolve()
+    solver = AmgXSolve()
     x = solver.solve_tri(dlu, d, dlu, b)[0]
     assert cp.allclose(x, cp.array([2., 3., 3., 2.]))
