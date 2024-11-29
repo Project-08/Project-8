@@ -11,7 +11,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/project-08/project-8:latest
+      image: ghcr.io/project-08/project-8/project8:latest
+      credentials:
+        username: ${{ secrets.ghcr_user }}
+        password: ${{ secrets.ghcr_token }}
+
     env:
       NOGPU: 1
     steps:
