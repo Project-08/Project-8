@@ -1,27 +1,46 @@
+"""
+File for defining custom modules.
+Custom module names may not conflict with torch.nn module names!
+"""
+
 import torch
 import torch.nn as nn
+from typing import Any
 
 
-class polyReLU(nn.Module):
+class abstractModule(nn.Module):
+    """Abstract class for neural network modules"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Pass all arguments of __init__ as kwargs to super().__init__
+        in child classes"""
+        super().__init__()
+        self.kwargs: dict[str, Any] = kwargs
+
+    def extra_repr(self) -> str:
+        out = ''
+        for key, value in self.kwargs.items():
+            out = out + key + '=' + str(value) + ', '
+        return out[:-2]
+
+
+class polyReLU(abstractModule):
     """ReLU^n activation function (for DRM)"""
 
     def __init__(self, n: int) -> None:
-        super().__init__()
+        super().__init__(n=n)
         self.n: int = n
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.pow(torch.relu(x), self.n)
 
-    def __str__(self) -> str:
-        return 'polyReLU(n=' + str(self.n) + ')'
 
-
-class DRM_block(nn.Module):
+class DRM_block(abstractModule):
     """DRM block as described in deep ritz paper, defaults are also in paper"""
 
     def __init__(self, width: int, act_fn: nn.Module = polyReLU(3),
                  n_linear: int = 2) -> None:
-        super().__init__()
+        super().__init__(width=width, act_fn=act_fn, n_linear=n_linear)
         self.layers: nn.ModuleList = nn.ModuleList()
         for i in range(n_linear):
             self.layers.append(nn.Linear(width, width))
@@ -33,32 +52,26 @@ class DRM_block(nn.Module):
             x_temp = layer(x_temp)
         return x + x_temp
 
-    def __str__(self) -> str:
-        out: str = 'DRM_block:\n'
-        for layer in self.layers:
-            out = out + '   ' + str(layer) + '\n'
-        return out + '   ' + '+ block input (skip/residual connection)'
 
-
-class Sin(nn.Module):
+class Sin(abstractModule):
     """Sin activation function"""
 
-    def __init__(self, multiplier: float = 1.0) -> None:
-        super().__init__()
-        self.multiplier: float = multiplier
+    def __init__(self, freq: float = 1.0) -> None:
+        super().__init__(freq=freq)
+        self.freq: float = freq
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return torch.sin(x * self.multiplier)
-
-    def __str__(self) -> str:
-        return f'Sin(multiplier={self.multiplier})'
+        return torch.sin(x * self.freq)
 
 
-class FourierActivation(nn.Module):
-    """Fourier series like activation function with learnable parameters"""
+class FourierActivation(abstractModule):
+    """
+    Fourier series like activation function with learnable parameters
+    for every neuron: x = a*sin(f*x + p), where a, f, p are learnable
+    """
 
     def __init__(self, width: int) -> None:
-        super().__init__()
+        super().__init__(width=width)
         self.width: int = width
         self.amps: nn.Parameter = nn.Parameter(torch.randn(1, width))
         self.freqs: nn.Parameter = nn.Parameter(torch.randn(1, width))
@@ -67,5 +80,6 @@ class FourierActivation(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.sin(self.freqs * x + self.phases) * self.amps
 
-    def __str__(self) -> str:
-        return self.__class__.__name__ + '(width=' + str(self.width) + ')'
+
+if __name__ == '__main__':
+    pass

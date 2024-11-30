@@ -77,3 +77,12 @@ def train() -> None:
     x, y = coord_space.regrid(grid)
     f = coord_space.regrid(output)[0]
     utils.plot_2d(x, y, f, title='output_drm')
+
+
+def main() -> None:
+    train()
+    pass
+
+
+if __name__ == '__main__':
+    main()

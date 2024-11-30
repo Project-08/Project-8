@@ -1,7 +1,12 @@
+"""
+File for defining models.
+model names may not conflict with torch.nn module names!
+"""
+
 import torch
 import torch.nn as nn
 from torch.autograd import grad
-from . import modules as mod
+from project8.neural_network import modules as mod
 import warnings
 from typing import Callable, Dict, Any, Optional, Self
 
@@ -23,8 +28,11 @@ class NN(nn.Module):
                          ] | Callable[
                              [torch.Tensor], torch.Tensor
                          ],
-            bias_init: Callable[[torch.Tensor, Any], torch.Tensor] | Callable[
-                [torch.Tensor], torch.Tensor],
+            bias_init: Callable[
+                           [torch.Tensor, Any], torch.Tensor
+                       ] | Callable[
+                           [torch.Tensor], torch.Tensor
+                       ],
             weight_init_kwargs: Optional[Dict[str, Any]] = None,
             bias_init_kwargs: Optional[Dict[str, Any]] = None
     ) -> None:
@@ -43,12 +51,6 @@ class NN(nn.Module):
                                     **weight_init_kwargs)  # type: ignore
                         bias_init(sub_layer.bias,
                                   **bias_init_kwargs)  # type: ignore
-
-    def __str__(self) -> str:
-        out = ''
-        for layer in self.layers:
-            out = out + str(layer) + '\n'
-        return out
 
     @classmethod
     def empty(cls) -> Self:
@@ -90,6 +92,8 @@ class NN(nn.Module):
 
 class diff_NN(NN):
     """
+    Deprecated, use autograd_wrapper.Differentiator with NN instead.
+
     Neural network with differential operators implemented,
     for convenience and efficiency writing pinn and drm loss functions.
 
@@ -109,6 +113,11 @@ class diff_NN(NN):
         self.output: torch.Tensor = torch.Tensor()
         self.__cache: Dict[
             str, torch.Tensor] = {}  # only access cache through methods
+        warnings.warn(
+            'diff_NN is deprecated,'
+            ' use autograd_wrapper.Differentiator instead'
+            ' with a NN instance attached to it.'
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         self.__cache = {}  # reset cached differences
@@ -165,17 +174,6 @@ class diff_NN(NN):
         else:
             raise Exception('Output shape must be the same as input shape')
 
-    def laplacian(self, out_dim_index: int = 0) -> torch.Tensor:
-        """Returns laplacian of output,
-        but the entire hessian is computed and cached.
-        Not self.divergence(self.gradient(out_dim_index)),
-        as that doesn't cache second diffs."""
-        key = str(out_dim_index) + 'laplacian'
-        if key not in self.__cache:
-            laplacian_u = torch.zeros_like(self.output)
-            for i in range(self.input.shape[1]):
-                laplacian_u += self.diff(
-                    i, i, out_dim_index=out_dim_index
-                )
-            self.__cache[key] = laplacian_u
-        return self.__cache[key]
+
+if __name__ == '__main__':
+    pass

@@ -43,7 +43,7 @@ def K(coords: torch.Tensor) -> torch.Tensor:
 
 def pinn_wave_pde(model: models.diff_NN) -> torch.Tensor:
     f = F(model.input)
-    residual = model.diff(2, 2) - model.laplacian() - f
+    residual: torch.Tensor = model.diff(2, 2) - model.laplacian() - f
     return residual.abs().mean()
 
 

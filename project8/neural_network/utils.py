@@ -178,14 +178,23 @@ class ParameterSpace:
 
 
 class DataLoader:
+    """
+    DataLoader for training neural networks.
+    Device defaults to device of data
+    """
+
     def __init__(self, all_data: torch.Tensor, batch_size: int,
-                 device: str = 'cpu',
                  output_requires_grad: bool = False,
-                 shuffle: bool = True) -> None:
-        self.all_data = all_data.to(device)
+                 shuffle: bool = True,
+                 device: Optional[str] = None) -> None:
+        if device is not None:
+            self.all_data = all_data.to(device)
+            self.device = device
+        else:
+            self.all_data = all_data
+            self.device = str(self.all_data.device)
         self.n = all_data.shape[0]
         self.batch_size = batch_size
-        self.device = device
         self.output_requires_grad = output_requires_grad
         self.do_shuffle = shuffle
         if self.do_shuffle:
@@ -200,7 +209,7 @@ class DataLoader:
         if self.i == self.n_batches:
             self.i = 0
             if self.do_shuffle:
-                self.all_data = self.all_data[torch.randperm(self.n)]
+                self.__shuffle()
         data = self.all_data[
                self.i * self.batch_size:(self.i + 1) * self.batch_size]
         self.i += 1
