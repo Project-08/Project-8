@@ -53,6 +53,9 @@ class file_synced_dict:
     def values(self) -> list[Any]:
         return list(self.__contents.values())
 
+    def __str__(self) -> str:
+        return str(self.__contents)
+
 
 def save_model_state(model: NN, filename: str) -> None:
     model_file = file_synced_dict(filename)
