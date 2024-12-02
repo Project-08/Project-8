@@ -175,7 +175,7 @@ class AmgXSolve(Solve, TriSolve):
 
     def solve(self, a: spmatrix, b: cp.ndarray) -> tuple[cp.ndarray, Perf]:
         if not isspmatrix_csr(a):
-            warn("CuPySolve.solve: converting matrix to csr")
+            warn("AmgXSolve.solve: converting matrix to csr")
             a = a.tocsr()
 
         perf = Perf(0, buffer_size_is_tight=True)
