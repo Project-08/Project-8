@@ -8,7 +8,7 @@ from typing import Any
 
 
 def source(input: torch.Tensor) -> torch.Tensor:
-    return torch.sin(4 * input[:, 0] * input[:, 1]).unsqueeze(1)
+    return torch.sin(12 * input[:, 0] * input[:, 1]).unsqueeze(1)
 
 
 def drm_loss_2d_poisson_domain(diff: aw.Differentiator) -> torch.Tensor:
@@ -25,7 +25,7 @@ def drm_loss_2d_poisson_bndry(diff: aw.Differentiator) -> torch.Tensor:
 def train() -> None:
     device = utils.get_device()
     # init model
-    act_fn = modules.Sin(torch.pi)
+    act_fn = modules.PolyReLU(3)
     model = models.NN.drm(2, 1, 20, 4, act_fn=act_fn)
     logging.info(model)
     model.to(device)

@@ -21,6 +21,7 @@ class file_synced_dict:
     Uses torch's save and load function.
     Files are in the models folder.
     """
+
     def __init__(self, filename: str) -> None:
         if not filename.endswith('.pth'):
             filename += '.pth'
@@ -68,10 +69,8 @@ def save_model_state(model: NN, filename: str) -> None:
     model_file['model_definition'] = model.definition()
 
 
-def load_model(filename: str) -> NN:
+def load_model(filename: str) -> Any:
     model_file = file_synced_dict(filename)
-    model: NN = NN.empty()
-    for layer_str in model_file['model_definition'].split('\n'):
-        model.layers.append(eval(layer_str))
+    model = eval(model_file['model_definition'])
     model.load_state_dict(model_file['model_state'])
     return model
