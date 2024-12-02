@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - wgraj-amgx
   pull_request:
 
 jobs:
@@ -15,7 +14,6 @@ jobs:
       credentials:
         username: ${{ secrets.ghcr_user }}
         password: ${{ secrets.ghcr_token }}
-
     env:
       NOGPU: 1
     steps:

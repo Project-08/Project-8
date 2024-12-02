@@ -1,3 +1,5 @@
+import os
+import re
 import weakref
 from abc import ABC, abstractmethod
 from logging import warn
@@ -12,6 +14,47 @@ from cupyx.scipy.sparse import diags, isspmatrix_csr, spmatrix
 from cupyx.scipy.sparse.linalg import spsolve
 
 from .perf import Perf
+
+AMGX_CONFIG_PATH = os.environ.get("AMGX_CONFIG_PATH",
+                                  "/usr/local/lib/configs/")
+
+# Extremely slow configs have been commented out
+AMGX_CONFIGS = (
+    "AGGREGATION_DILU",
+    "AGGREGATION_GS",
+    "AGGREGATION_JACOBI",
+    "AGGREGATION_MULTI_PAIRWISE",
+    # "CG_DILU",
+    "CLASSICAL_CG_CYCLE",
+    "CLASSICAL_CGF_CYCLE",
+    "CLASSICAL_F_CYCLE",
+    "CLASSICAL_V_CYCLE",
+    "CLASSICAL_W_CYCLE",
+    "FGMRES_AGGREGATION_DILU",
+    "FGMRES_AGGREGATION_JACOBI",
+    "FGMRES_CLASSICAL_AGGRESSIVE_HMIS",
+    "FGMRES_CLASSICAL_AGGRESSIVE_PMIS",
+    "FGMRES_NOPREC",
+    "GMRES_AMG_D2",
+    "IDR_DILU",
+    "IDRMSYNC_DILU",
+    # "PBICGSTAB_AGGREGATION_W_JACOBI",
+    "PBICGSTAB_CLASSICAL_JACOBI",
+    "PBICGSTAB_NOPREC",
+    "PCG_AGGREGATION_JACOBI",
+    "PCG_CLASSICAL_F_JACOBI",
+    "PCG_CLASSICAL_V_JACOBI",
+    "PCG_CLASSICAL_W_JACOBI",
+    # "PCG_DILU",
+    "PCGF_CLASSICAL_F_JACOBI",
+    "PCGF_CLASSICAL_V_JACOBI",
+    "PCGF_CLASSICAL_W_JACOBI",
+    "PCG_NOPREC",
+)
+
+_AMGX_MEMORY_PAT = re.compile(r"Maximum Memory Usage:\s*(?P<value>[\d\.]+) GB")
+_AMGX_TIME_PAT = re.compile(r"Total Time: (?P<total_time>[\d.]+)\s*\n.*\n"
+                            r"\s*solve: (?P<solve_time>[\d.]+)")
 
 
 def spmatrix_size(matrix: spmatrix) -> int:
@@ -73,6 +116,9 @@ class CuSPARSETriSolve(TriSolve):
                                        buffer_size,
                                        buffer_size_is_tight=True))
 
+    def __str__(self) -> str:
+        return "cuSPARSE dgtsv2_nopivot"
+
 
 class CuPySolve(Solve, TriSolve):
     """Solver of Ax=b systems using CuPy."""
@@ -98,24 +144,17 @@ class CuPySolve(Solve, TriSolve):
                 Perf.from_measurements((start_ns, end_ns), None,
                                        spmatrix_size(a)))
 
+    def __str__(self) -> str:
+        return "CuPy spsolve"
+
 
 class AmgXSolve(Solve, TriSolve):
     """Solver of Ax=b systems using AmgX."""
 
-    def __init__(self) -> None:
-        self._cfg = pyamgx.Config().create_from_dict({
-            "config_version": 2,
-            "determinism_flag": 1,
-            "exception_handling": 1,
-            "solver": {
-                "monitor_residual": 1,
-                "solver": "BICGSTAB",
-                "convergence": "RELATIVE_INI_CORE",
-                "preconditioner": {
-                    "solver": "NOSOLVER"
-                }
-            }
-        })
+    def __init__(self, config_name: str) -> None:
+        self._config_name = config_name
+        self._cfg = pyamgx.Config().create_from_file(
+            os.path.join(AMGX_CONFIG_PATH, config_name + ".json"))
         self._rsc = pyamgx.Resources().create_simple(self._cfg)
         self._solver = pyamgx.Solver().create(self._rsc, self._cfg)
         self._finalizer = weakref.finalize(self, self._destructor)
@@ -139,9 +178,21 @@ class AmgXSolve(Solve, TriSolve):
             warn("CuPySolve.solve: converting matrix to csr")
             a = a.tocsr()
 
-        start_event = Event()
-        end_event = Event()
-        start_ns = process_time_ns()
+        perf = Perf(0, buffer_size_is_tight=True)
+
+        def print_callback(msg: str) -> None:
+            mem = re.search(_AMGX_MEMORY_PAT, msg)
+            if mem is not None:
+                perf.buffer_size = int(
+                    float(mem.group("value")) * 1_000_000_000)
+                return
+            time_ = re.search(_AMGX_TIME_PAT, msg)
+            if time_ is not None:
+                perf.total_ns = int(
+                    float(time_.group("total_time")) * 1_000_000_000)
+                perf.gpu_ms = float(time_.group("solve_time")) * 1_000
+
+        pyamgx.register_print_callback(print_callback)
 
         A = pyamgx.Matrix().create(self._rsc)
         B = pyamgx.Vector().create(self._rsc)
@@ -153,11 +204,8 @@ class AmgXSolve(Solve, TriSolve):
         B.upload_raw(b.data.ptr, b.shape[0])
         X.upload(x)
 
-        start_event.record()
         self._solver.setup(A)
         self._solver.solve(B, X, zero_initial_guess=True)
-        end_event.record()
-        end_event.synchronize()
 
         X.download(x)
 
@@ -165,7 +213,7 @@ class AmgXSolve(Solve, TriSolve):
         X.destroy()
         B.destroy()
 
-        end_ns = process_time_ns()
-        return (x,
-                Perf.from_measurements((start_ns, end_ns),
-                                       (start_event, end_event), None))
+        return (x, perf)
+
+    def __str__(self) -> str:
+        return f"AmgX ({self._config_name})"
