@@ -1,34 +1,32 @@
 from project8.neural_network import utils
 from project8.neural_network import modules
 from project8.neural_network import models
+from project8.neural_network import autograd_wrapper as aw
 import torch
 import logging
+from typing import Any
 
 
 def source(input: torch.Tensor) -> torch.Tensor:
     return torch.sin(4 * input[:, 0] * input[:, 1]).unsqueeze(1)
 
 
-def drm_loss_2d_poisson_domain(model: models.diff_NN) -> torch.Tensor:
-    # sum/mean of 0.5 * (u_x^2 + u_y^2) - f*u in the domain
-    # eq 13 first term
-    grad = model.gradient()
-    f = source(model.input)
+def drm_loss_2d_poisson_domain(diff: aw.Differentiator) -> torch.Tensor:
+    grad = diff.gradient()
+    f = source(diff.input())
     return torch.mean(
-        0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * model.output)
+        0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * diff.output())
 
 
-def drm_loss_2d_poisson_bndry(model: models.diff_NN) -> torch.Tensor:
-    # sum/mean of u^2 on the boundary
-    # eq 13 second term
-    return model.output.pow(2).mean()
+def drm_loss_2d_poisson_bndry(diff: aw.Differentiator) -> torch.Tensor:
+    return diff.output().pow(2).mean()
 
 
 def train() -> None:
     device = utils.get_device()
     # init model
     act_fn = modules.Sin(torch.pi)
-    model = models.diff_NN.drm(2, 1, 20, 4, act_fn=act_fn)
+    model = models.NN.drm(2, 1, 20, 4, act_fn=act_fn)
     logging.info(model)
     model.to(device)
     model.double()
@@ -41,46 +39,47 @@ def train() -> None:
     # training params
     n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    diff = aw.Differentiator(model)
     coord_space = utils.ParameterSpace(
         [[-1, 2], [-1, 1]], device)
-    tmr = utils.Timer()
+    pde_data = utils.DataLoader(coord_space.rand(100000), 1000, True)
+    bndry_data = utils.DataLoader(coord_space.bndry_rand(100000), 500, True)
+    problem: list[list[Any]] = [
+        [drm_loss_2d_poisson_domain, pde_data, 1],
+        [drm_loss_2d_poisson_bndry, bndry_data, 10]
+    ]
 
     # plot source function
     f_loc = coord_space.fgrid(300)
     f = source(f_loc)
     x, y = coord_space.regrid(f_loc)
     f = coord_space.regrid(f)[0]
-    utils.plot_2d(x, y, f, title='source function', fig_id=1)
-
-    tmr.start()
+    utils.plot_2d(x, y, f, title='source_drm_2d_poisson', fig_id=1)
     # train
     for epoch in range(n_epochs):
-        model(coord_space.rand(1000).requires_grad_(True))
-        domain_loss = drm_loss_2d_poisson_domain(model)
-        model(coord_space.bndry_rand(500).requires_grad_(True))
-        bndry_loss = drm_loss_2d_poisson_bndry(model)
-        loss: torch.Tensor = domain_loss + 100 * bndry_loss
+        loss: torch.Tensor = torch.tensor(0.0, device=device)
+        for i in problem:
+            diff.set_input(i[1]())
+            loss += i[2] * i[0](diff)
         optimizer.zero_grad()
         loss.backward()  # type: ignore
         optimizer.step()
         if epoch % 100 == 0:
-            logging.info(
-                f'Epoch {epoch},'
-                f' domain loss: {domain_loss.item()},'
-                f' boundary loss: {bndry_loss.item()},'
-                f' total: {loss.item()}')
-    tmr.rr()
+            print(f'Epoch {epoch}, loss: {loss.item()}')
 
     # plot output
     grid = coord_space.fgrid(200)
     output = model(grid)
     x, y = coord_space.regrid(grid)
     f = coord_space.regrid(output)[0]
-    utils.plot_2d(x, y, f, title='output_drm')
+    utils.plot_2d(x, y, f, title='output_drm_2d_poisson', fig_id=2)
 
 
 def main() -> None:
+    tmr = utils.Timer()
+    tmr.start()
     train()
+    tmr.rr()
     pass
 
 

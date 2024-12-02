@@ -10,11 +10,13 @@ from typing import Any
 def source(input: torch.Tensor) -> torch.Tensor:
     return torch.sin(4 * input[:, 0] * input[:, 1]).unsqueeze(1)
 
+
 def drm_loss_2d_poisson_domain(diff: aw.Differentiator) -> torch.Tensor:
     grad = diff.gradient()
     f = source(diff.input())
     return torch.mean(
         0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * diff.output())
+
 
 def drm_loss_2d_poisson_bndry(diff: aw.Differentiator) -> torch.Tensor:
     return diff.output().pow(2).mean()
@@ -57,6 +59,7 @@ def train(params: dict[str, Any]) -> tuple[models.NN, float]:
         loss.backward()  # type: ignore
         optimizer.step()
     return model, loss.item()
+
 
 def main() -> None:
     device = utils.get_device()

@@ -9,11 +9,14 @@ from typing import Any
 
 
 class abstractModule(nn.Module):
-    """Abstract class for neural network modules"""
+    """
+    Abstract class for neural network modules
+
+    Pass all arguments of __init__ as kwargs to super().__init__
+    in child classes. This is to allow proper saving and loading.
+    """
 
     def __init__(self, **kwargs: Any) -> None:
-        """Pass all arguments of __init__ as kwargs to super().__init__
-        in child classes"""
         super().__init__()
         self.kwargs: dict[str, Any] = kwargs
 
@@ -79,7 +82,3 @@ class FourierActivation(abstractModule):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.sin(self.freqs * x + self.phases) * self.amps
-
-
-if __name__ == '__main__':
-    pass
