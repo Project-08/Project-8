@@ -16,6 +16,12 @@ model_folder = os.path.join(
 
 
 class file_synced_dict:
+    """
+    Class to create a dictionary that is synced with a file.
+    Uses torch's save and load function.
+    Files are in the models folder.
+    """
+
     def __init__(self, filename: str) -> None:
         if not filename.endswith('.pth'):
             filename += '.pth'
@@ -60,79 +66,11 @@ class file_synced_dict:
 def save_model_state(model: NN, filename: str) -> None:
     model_file = file_synced_dict(filename)
     model_file['model_state'] = model.state_dict()
-    model_file['model_str'] = str(model)
+    model_file['model_definition'] = model.definition()
 
 
-def str_remove_line_before_dots_if_dots_in_line(s: str) -> str:
-    if s[-1] != '\n':  # make sure last line ends with a newline
-        s += '\n'
-    out = ''
-    line = ''
-    before_dots = True
-    for char in s:
-        line += char
-        if char == '\n':
-            if ':' not in line:
-                out += line
-            else:
-                out += char
-            line = ''
-            before_dots = True
-        if not before_dots:
-            out += char
-        if char == ':':
-            before_dots = False
-    return out
-
-
-def str_format_modulelist_args_as_list(s: str) -> str:
-    start = s.find('ModuleList') + len('ModuleList') + 1
-    before = s[:start] + '['
-    out = ''
-    bracket_depth = 0
-    done = False
-    for char in s[start:]:
-        if done:
-            out += char
-            continue
-        if char == '(':
-            bracket_depth += 1
-            out += char
-        elif char == ')':
-            bracket_depth -= 1
-            if bracket_depth == 0:
-                out += char + ','
-            elif bracket_depth == -1:
-                out += ']' + char
-                done = True
-            else:
-                out += char
-        else:
-            out += char
-    if 'ModuleList' in out:
-        out = str_format_modulelist_args_as_list(out)
-    return before + out
-
-
-def format_model_str(s: str) -> str:
-    s = str_remove_line_before_dots_if_dots_in_line(s)
-    s = str_format_modulelist_args_as_list(s)
-    return s
-
-
-def load_model(filename: str) -> NN:
+def load_model(filename: str) -> Any:
     model_file = file_synced_dict(filename)
-    if 'format_model_str' not in model_file.keys():
-        model_file['format_model_str'] = format_model_str(
-            model_file['model_str'])
-    model: NN = eval(model_file['format_model_str'])
+    model = eval(model_file['model_definition'])
     model.load_state_dict(model_file['model_state'])
     return model
-
-
-def main() -> None:
-    pass
-
-
-if __name__ == '__main__':
-    main()

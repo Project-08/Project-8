@@ -4,6 +4,7 @@ from project8.neural_network import models
 from project8.neural_network import autograd_wrapper as aw
 import torch
 import logging
+from typing import Any
 
 
 def source(input: torch.Tensor) -> torch.Tensor:
@@ -43,6 +44,10 @@ def train() -> None:
         coord_space.rand(100000), 1000, True)
     bndry_data = utils.DataLoader(
         coord_space.bndry_rand(100000), 500, True)
+    problem: list[list[Any]] = [
+        [pinn_domain_loss, pde_data, 1],
+        [pinn_bndry_loss, bndry_data, 1]
+    ]
 
     # plot source function
     f_loc = coord_space.fgrid(300)
@@ -53,20 +58,15 @@ def train() -> None:
 
     # train
     for epoch in range(n_epochs):
-        diff.set_input(pde_data())  # forward pass on domain
-        domain_loss = pinn_domain_loss(diff)  # loss before other forward pass
-        diff.set_input(bndry_data())  # forward pass on boundary
-        bndry_loss = pinn_bndry_loss(diff)
-        loss: torch.Tensor = domain_loss + 1 * bndry_loss
+        loss: torch.Tensor = torch.tensor(0.0, device=device)
+        for i in problem:
+            diff.set_input(i[1]())
+            loss += i[2] * i[0](diff)
         optimizer.zero_grad()
         loss.backward()  # type: ignore
         optimizer.step()
         if epoch % 100 == 0:
-            logging.info(
-                f'Epoch {epoch},'
-                f'domain loss: {domain_loss.item()}, '
-                f'boundary loss: {bndry_loss.item()}, '
-                f'total: {loss.item()}')
+            print(f'Epoch {epoch}, loss: {loss.item()}')
 
     # plot output
     grid = coord_space.fgrid(200)

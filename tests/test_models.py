@@ -4,6 +4,7 @@ import torch
 
 max_loss = 0.4
 
+
 def train(model: models.NN) -> tuple[float, models.NN]:
     device = 'cpu'
     model.to(device)
@@ -42,13 +43,21 @@ def test_pinn() -> None:
     loss = train(model)[0]
     assert loss < max_loss
 
-def test_save_load() -> None:
-    loss, model = train(models.NN.rectangular_fnn(1, 1, 32, 5, torch.nn.ReLU()))
+
+def test_save_load_pinn() -> None:
+    loss, model = train(
+        models.NN.rectangular_fnn(1, 1, 32, 5, torch.nn.ReLU()))
     model_str = str(model)
     checkpoints.save_model_state(model, 'test.pth')
     model2 = checkpoints.load_model('test.pth')
     loss, model2 = train(model2)
     assert model_str == str(model2) and loss < max_loss
 
-if __name__ == '__main__':
-    pass
+
+def test_save_load_drm() -> None:
+    loss, model = train(models.NN.drm(1, 1, 5, 3))
+    model_str = str(model)
+    checkpoints.save_model_state(model, 'test.pth')
+    model2 = checkpoints.load_model('test.pth')
+    loss, model2 = train(model2)
+    assert model_str == str(model2) and loss < max_loss

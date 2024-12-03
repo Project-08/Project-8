@@ -5,9 +5,7 @@ model names may not conflict with torch.nn module names!
 
 import torch
 import torch.nn as nn
-from torch.autograd import grad
 from project8.neural_network import modules as mod
-import warnings
 from typing import Callable, Dict, Any, Optional, Self
 
 
@@ -52,6 +50,27 @@ class NN(nn.Module):
                         bias_init(sub_layer.bias,
                                   **bias_init_kwargs)  # type: ignore
 
+    def definition(self) -> str:
+        """
+        Should return a string that can be evaluated to initialize a model.
+
+        """
+        out = self.__class__.__name__ + '(ModuleList([\n'
+        for layer in self.layers:
+            layer_str: str = ''
+            lines: list[str] = str(layer).split('\n')
+            for line in lines:
+                if ':' not in line:
+                    layer_str += line.strip()
+            while layer_str.count('(') > layer_str.count(')'):
+                layer_str += ')'
+            while layer_str.count(')') > layer_str.count('('):
+                layer_str = '(' + layer_str
+            while layer_str.startswith('(') and layer_str.endswith(')'):
+                layer_str = layer_str[1:-1]
+            out += '    ' + layer_str + ',\n'
+        return out[:-2] + '\n]))'
+
     @classmethod
     def empty(cls) -> Self:
         return cls(nn.ModuleList())
@@ -75,105 +94,24 @@ class NN(nn.Module):
     def drm(cls,
             dim_in: int, dim_out: int,
             width: int, n_blocks: int,
-            act_fn: nn.Module = mod.polyReLU(3),
+            act_fn: nn.Module = mod.PolyReLU(3),
             n_linear_drm: int = 2) -> Self:
         layers = nn.ModuleList()
-        if dim_in != width:
+        if dim_in > width:
             layers.append(nn.Linear(dim_in, width))
-        if dim_in < width:
-            warnings.warn(
-                'padding input with zeros when n_in<width is not implemented'
-            )
+        elif dim_in < width:
+            layers.append(mod.Padding(width))
         for i in range(n_blocks):
             layers.append(mod.DRM_block(width, act_fn, n_linear_drm))
         layers.append(nn.Linear(width, dim_out))
         return cls(layers)
 
 
-class diff_NN(NN):
-    """
-    Deprecated, use autograd_wrapper.Differentiator with NN instead.
-
-    Neural network with differential operators implemented,
-    for convenience and efficiency writing pinn and drm loss functions.
-
-    Differential operations are cached for efficiency,
-     cache is reset at each forward pass.
-
-    Dimension indexes (0 indexed) are used for partial derivatives.
-    convention: last dimension is time, so xyzt, or xyz, or xyt etc.
-
-    cache keys: out_dim_indexes + 'name' + in_dim_indexes
-    (e.g. 0diff01 is grad(u_xy))
-    """
-
-    def __init__(self, layers: nn.ModuleList) -> None:
-        super().__init__(layers)
-        self.input: torch.Tensor = torch.Tensor()
-        self.output: torch.Tensor = torch.Tensor()
-        self.__cache: Dict[
-            str, torch.Tensor] = {}  # only access cache through methods
-        warnings.warn(
-            'diff_NN is deprecated,'
-            ' use autograd_wrapper.Differentiator instead'
-            ' with a NN instance attached to it.'
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        self.__cache = {}  # reset cached differences
-        self.input = x
-        self.output = super().forward(x)
-        return self.output
-
-    def output_append(self, cols: torch.Tensor) -> None:
-        """Appends a new column to the output tensor.
-        Needed for more complex pde's
-        e.g. with derivatives wrt to u*v with u and v being outputs."""
-        self.output = torch.cat((self.output, cols), 1)
-
-    def gradient(self, out_dim_index: int = 0) -> torch.Tensor:
-        """Returns gradient vector of the last output wrt last input"""
-        key = str(out_dim_index) + 'diff'
-        if key not in self.__cache:
-            output = self.output[:, out_dim_index].unsqueeze(1)
-            self.__cache[key] = grad(
-                output, self.input, grad_outputs=torch.ones_like(output),
-                create_graph=True
-            )[0]
-        return self.__cache[key]
-
-    def diff(self, *in_dim_indexes: int,
-             out_dim_index: int = 0) -> torch.Tensor:
-        """Main method for getting partial derivatives.
-        args are dimension indexes, e.g. diff(0, 1) is u_xy."""
-        diff = self.gradient(out_dim_index)[:, in_dim_indexes[0]]
-        key = str(out_dim_index) + 'diff'
-        for i in range(1, len(in_dim_indexes)):
-            key += str(in_dim_indexes[i - 1])
-            if key not in self.__cache:
-                self.__cache[key] = grad(
-                    diff, self.input, grad_outputs=torch.ones_like(diff),
-                    create_graph=True
-                )[0]
-            diff = self.__cache[key][:, in_dim_indexes[i]]
-        return diff.unsqueeze(1)
-
-    def divergence(self, vector: torch.Tensor) -> torch.Tensor:
-        """Returns divergence of vector.
-        Vector must be calculated from model input.
-        Caching is not supported as function input can be anything"""
-        if vector.shape == self.input.shape:
-            div = torch.zeros_like(self.input[:, 0])
-            for i in range(self.input.shape[1]):
-                div += grad(
-                    vector[:, i], self.input,
-                    grad_outputs=torch.ones_like(vector[:, i]),
-                    create_graph=True
-                )[0][:, i]
-            return div.unsqueeze(1)
-        else:
-            raise Exception('Output shape must be the same as input shape')
+def main() -> None:
+    model = NN.drm(2, 1, 64, 9)
+    print(model.definition())
+    pass
 
 
 if __name__ == '__main__':
-    pass
+    main()

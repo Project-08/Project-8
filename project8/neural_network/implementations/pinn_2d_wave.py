@@ -1,8 +1,10 @@
 from project8.neural_network import utils
 from project8.neural_network import modules
 from project8.neural_network import models
+from project8.neural_network import autograd_wrapper as aw
 import torch
 import logging
+from typing import Any
 
 
 def sourcefunc_A4(x: torch.Tensor, y: torch.Tensor,
@@ -41,25 +43,25 @@ def K(coords: torch.Tensor) -> torch.Tensor:
     return coeffK3(coords[:, 0], coords[:, 1]).unsqueeze(1)
 
 
-def pinn_wave_pde(model: models.diff_NN) -> torch.Tensor:
-    f = F(model.input)
-    residual: torch.Tensor = model.diff(2, 2) - model.laplacian() - f
-    return residual.abs().mean()
+def pinn_wave_pde(diff: aw.Differentiator) -> torch.Tensor:
+    f = F(diff.input())
+    residual: torch.Tensor = diff(2, 2) - diff.laplacian() - f
+    return residual.pow(2).mean()
 
 
-def pinn_wave_bc(model: models.diff_NN) -> torch.Tensor:
-    return model.output.pow(2).mean()
+def pinn_wave_bc(diff: aw.Differentiator) -> torch.Tensor:
+    return diff.output().pow(2).mean()
 
 
-def pinn_wave_ic(model: models.diff_NN) -> torch.Tensor:
-    return model.output.pow(2).mean()
+def pinn_wave_ic(diff: aw.Differentiator) -> torch.Tensor:
+    return diff.output().pow(2).mean()
 
 
 def train() -> None:
     device = utils.get_device()
     # init model
     act_fn = modules.FourierActivation(64)
-    model = models.diff_NN.rectangular_fnn(3, 1, 64, 9, act_fn=act_fn)
+    model = models.NN.rectangular_fnn(3, 1, 64, 9, act_fn=act_fn)
     logging.info(model)
     model.to(device)
     model.double()
@@ -71,8 +73,8 @@ def train() -> None:
     # training params
     n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    diff = aw.Differentiator(function_to_attach=model)
     coord_space = utils.ParameterSpace([[0, 10], [0, 5], [0, 4]], device)
-    tmr = utils.Timer()
     domain_data_loader = utils.DataLoader(
         coord_space.rand(100000), 3000, device=device,
         output_requires_grad=True)
@@ -86,28 +88,23 @@ def train() -> None:
     ic_data_loader = utils.DataLoader(
         coord_space.select_bndry_rand(100000, ic_select), 300, device=device,
         output_requires_grad=True)
+    problem: list[list[Any]] = [
+        [pinn_wave_pde, domain_data_loader, 1],
+        [pinn_wave_bc, bc_data_loader, 1],
+        [pinn_wave_ic, ic_data_loader, 1]
+    ]
 
     # train
-    tmr.start()
     for epoch in range(n_epochs):
-        model(domain_data_loader())
-        domain_loss = pinn_wave_pde(model)
-        model(bc_data_loader())
-        bndry_loss = pinn_wave_bc(model)
-        model(ic_data_loader())
-        ic_loss = pinn_wave_ic(model)
-        loss: torch.Tensor = 100 * domain_loss + bndry_loss + ic_loss
+        loss: torch.Tensor = torch.tensor(0.0, device=device)
+        for i in problem:
+            diff.set_input(i[1]())
+            loss += i[2] * i[0](diff)
         optimizer.zero_grad()
         loss.backward()  # type: ignore
         optimizer.step()
         if epoch % 100 == 0:
-            logging.info(f'Epoch {epoch},'
-                         f' pde: {domain_loss.item()},'
-                         f' bc: {bndry_loss.item()},'
-                         f' ic: {ic_loss.item()},'
-                         f' total: {loss.item()}'
-                         )
-    tmr.rr()
+            print(f'Epoch {epoch}, loss: {loss.item()}')
 
     # plot output
     grid = coord_space.fgrid(50)
@@ -125,3 +122,15 @@ def train() -> None:
     t_id = 49
     utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :],
                   title='output_wave3', fig_id=4)
+
+
+def main() -> None:
+    tmr = utils.Timer()
+    tmr.start()
+    train()
+    tmr.rr()
+    pass
+
+
+if __name__ == '__main__':
+    main()

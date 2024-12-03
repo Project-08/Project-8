@@ -1,9 +1,11 @@
-from project8.neural_network import models
 from project8.neural_network import utils
+from project8.neural_network import autograd_wrapper as aw
 import torch
 
 
-def f(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+def f(coords: torch.Tensor) -> torch.Tensor:
+    x = coords[:, 0].unsqueeze(1)
+    y = coords[:, 1].unsqueeze(1)
     return x.pow(3) + 3 * y.pow(2) + 2 * x * y + 2 * y.pow(3) + 3 * x + 2
 
 
@@ -35,93 +37,67 @@ def d2fdyx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return x * 0 + 2
 
 
-def def_model() -> models.diff_NN:
-    model = models.diff_NN.empty()
+def setup() -> tuple[aw.Differentiator, torch.Tensor, torch.Tensor]:
+    diff = aw.Differentiator(f)
     coord_space = utils.ParameterSpace([[-1, 1], [-1, 1]], 'cpu')
     grid = coord_space.fgrid(10).requires_grad_(True)
-    model.input = grid
-    x = grid[:, 0].unsqueeze(1)
-    y = grid[:, 1].unsqueeze(1)
-    model.output = f(x, y)
-    return model
-
-
-def test_dfdx() -> None:
-    model = def_model()
-    dx = model.diff(0)
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
-    dx_true = dfdx(x, y)
-    assert torch.allclose(dx, dx_true, atol=1e-5)
+    diff.set_input(grid)
+    x = diff.input()[:, 0].unsqueeze(1)
+    y = diff.input()[:, 1].unsqueeze(1)
+    return diff, x, y
 
 
 def test_dfdy() -> None:
-    model = def_model()
-    dy = model.diff(1)
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
+    diff, x, y = setup()
+    dy = diff(1)
     dy_true = dfdy(x, y)
     assert torch.allclose(dy, dy_true, atol=1e-5)
 
 
 def test_d2fdxx() -> None:
-    model = def_model()
-    d2x = model.diff(0, 0)
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
+    diff, x, y = setup()
+    d2x = diff(0, 0)
     d2x_true = d2fdxx(x, y)
     assert torch.allclose(d2x, d2x_true, atol=1e-5)
 
 
 def test_d3fdxxx() -> None:
-    model = def_model()
-    d3x = model.diff(0, 0, 0)
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
+    diff, x, y = setup()
+    d3x = diff(0, 0, 0)
     d3x_true = d3fdxxx(x, y)
     assert torch.allclose(d3x, d3x_true, atol=1e-5)
 
 
 def test_d2fdyy() -> None:
-    model = def_model()
-    d2y = model.diff(1, 1)
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
+    diff, x, y = setup()
+    d2y = diff(1, 1)
     d2y_true = d2fdyy(x, y)
     assert torch.allclose(d2y, d2y_true, atol=1e-5)
 
 
 def test_d2fdxy() -> None:
-    model = def_model()
-    d2xy = model.diff(0, 1)
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
+    diff, x, y = setup()
+    d2xy = diff(0, 1)
     d2xy_true = d2fdxy(x, y)
     assert torch.allclose(d2xy, d2xy_true, atol=1e-5)
 
 
 def test_d2fdyx() -> None:
-    model = def_model()
-    d2yx = model.diff(1, 0)
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
+    diff, x, y = setup()
+    d2yx = diff(1, 0)
     d2yx_true = d2fdyx(x, y)
     assert torch.allclose(d2yx, d2yx_true, atol=1e-5)
 
 
 def test_laplacian() -> None:
-    model = def_model()
-    lap = model.laplacian()
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
+    diff, x, y = setup()
+    lap = diff.laplacian()
     lap_true = d2fdxx(x, y) + d2fdyy(x, y)
     assert torch.allclose(lap, lap_true, atol=1e-5)
 
 
 def test_grad_div() -> None:
-    model = def_model()
-    lap = model.divergence(model.gradient())
-    x = model.input[:, 0].unsqueeze(1)
-    y = model.input[:, 1].unsqueeze(1)
+    diff, x, y = setup()
+    lap = diff.divergence(diff.gradient())
     lap_true = d2fdxx(x, y) + d2fdyy(x, y)
     assert torch.allclose(lap, lap_true, atol=1e-5)
