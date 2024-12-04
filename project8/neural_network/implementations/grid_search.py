@@ -1,5 +1,5 @@
 import itertools
-from project8.neural_network.implementations.DRM_2d_poisson_class import DRM2DPoisson
+from project8.neural_network.implementations.drm_2d_poisson_class import DRM2DPoisson
 
 class GridSearch:
     @staticmethod
@@ -33,10 +33,10 @@ def main():
         'n_inputs': [2],
         'n_outputs': [1],
         'width': [20],
-        'n_blocks': [4],
-        'lr': [1e-4],
-        'n_epochs': [1000],
-        'loss_weights': [(1, 100), (1, 50)],
+        # 'n_blocks': [4],
+        'lr': [1e-3],
+        'n_epochs': [5000],
+        # 'loss_weights': [(1, 100), (1, 50)],
     }
     
     # Only the specified hyperparameters will be varied
