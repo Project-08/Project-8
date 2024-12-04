@@ -8,7 +8,8 @@ from warnings import warn
 import time
 import os
 import logging
-from typing import Optional, List, Iterable, Any, Union
+from typing import Optional, List, Iterable, Any, Union, TypedDict, Callable, \
+    Dict
 
 plot_folder = os.path.join(
     os.path.dirname(
@@ -186,7 +187,7 @@ class DataLoader:
     def __init__(self, all_data: torch.Tensor, batch_size: int,
                  output_requires_grad: bool = False,
                  shuffle: bool = True,
-                 device: Optional[str] = None) -> None:
+                 device: Optional[str | torch.device] = None) -> None:
         if device is not None:
             self.all_data = all_data.to(device)
             self.device = device
@@ -234,12 +235,14 @@ class Timer:
         self.running = False
         self.t_elapsed += self.t_end - self.t_start
 
-    def read(self) -> None:
+    def elapsed(self) -> float:
         if self.running:
-            out = self.t_elapsed + (time.time() - self.t_start)
+            return self.t_elapsed + (time.time() - self.t_start)
         else:
-            out = self.t_elapsed
-        print(f'Time elapsed: {format_time(out)}')
+            return self.t_elapsed
+
+    def read(self) -> None:
+        print(f'Time elapsed: {format_time(self.elapsed())}')
 
     def rr(self) -> None:
         # read reset
@@ -266,3 +269,38 @@ def format_time(t: float) -> str:
         return f'{t / 60:.2f} min'
     else:
         return f'{t / 3600:.2f} h'
+
+
+class Params(TypedDict, total=False):
+    device: torch.device | str
+    # training params
+    n_epochs: int
+    optimizer: Any  # torch.optim.Optimizer. typing doesnt like optim.
+    lr: float
+    loss_fns: list[Callable[[Any], torch.Tensor]]
+    loss_weights: list[float]
+    loss_fn_data: list[torch.Tensor]
+    loss_fn_batch_sizes: list[int]
+    # model params
+    model_constructor: str
+    weight_init_fn: Callable[
+                     [torch.Tensor, Any], torch.Tensor
+                 ] | Callable[
+                     [torch.Tensor], torch.Tensor
+                 ]
+    bias_init_fn: Callable[
+                   [torch.Tensor, Any], torch.Tensor
+               ] | Callable[
+                   [torch.Tensor], torch.Tensor
+               ]
+    weight_init_kwargs: Optional[Dict[str, Any]]
+    bias_init_kwargs: Optional[Dict[str, Any]]
+    # rectangular_fnn
+    n_in: int
+    n_out: int
+    width: int
+    depth: int
+    act_fn: torch.nn.Module
+    # drm
+    n_blocks: int
+    n_linear_drm: int

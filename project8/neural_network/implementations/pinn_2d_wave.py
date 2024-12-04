@@ -45,7 +45,8 @@ def K(coords: torch.Tensor) -> torch.Tensor:
 
 def pinn_wave_pde(diff: aw.Differentiator) -> torch.Tensor:
     f = F(diff.input())
-    residual: torch.Tensor = diff(2, 2) - diff.laplacian() - f
+    residual: torch.Tensor = 2 * diff(2, 2) - diff.laplacian() - f
+    # .laplacian also includes 2nd diff wrt time
     return residual.pow(2).mean()
 
 

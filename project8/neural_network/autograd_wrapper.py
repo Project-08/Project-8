@@ -1,10 +1,12 @@
 import torch
 from torch.autograd import grad
 from typing import Dict, Callable
+from warnings import warn
 
 
 class Differentiator:
     """
+    DEPRECATED
     Differentiator class for neural networks.
 
     Differential operations are cached for efficiency,
@@ -24,6 +26,7 @@ class Differentiator:
         self.__input: torch.Tensor = torch.Tensor()
         self.__output: torch.Tensor = torch.Tensor()
         self.__cache: Dict[str, torch.Tensor] = {}  # private cache
+        warn('Deprecated warning for Differentiator class')
 
     def set_input(self, x: torch.Tensor) -> None:
         """Sets input tensor and executes function"""

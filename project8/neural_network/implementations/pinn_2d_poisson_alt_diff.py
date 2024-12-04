@@ -1,7 +1,7 @@
 from project8.neural_network import utils
 from project8.neural_network import modules
 from project8.neural_network import models
-from project8.neural_network import autograd_wrapper as aw
+from project8.neural_network.differential_operators import *
 import torch
 import logging
 from typing import Any
@@ -11,14 +11,14 @@ def source(input: torch.Tensor) -> torch.Tensor:
     return torch.sin(12 * input[:, 0] * input[:, 1]).unsqueeze(1)
 
 
-def pinn_domain_loss(diff: aw.Differentiator) -> torch.Tensor:
-    f = source(diff.input())
-    laplace = diff.laplacian()
+def pinn_domain_loss(model: models.NN) -> torch.Tensor:
+    f = source(model.input)
+    laplace = laplacian(model)
     return (laplace + f).pow(2).mean()
 
 
-def pinn_bndry_loss(diff: aw.Differentiator) -> torch.Tensor:
-    return diff.output().pow(2).mean()
+def pinn_bndry_loss(model: models.NN) -> torch.Tensor:
+    return model.output.pow(2).mean()
 
 
 def train() -> None:
@@ -34,10 +34,8 @@ def train() -> None:
         weight_init_kwargs={'gain': 0.5}
     )
 
-    diff = aw.Differentiator(function_to_attach=model)
-
     # training params
-    n_epochs = 1000
+    n_epochs = 5000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]], device)
     pde_data = utils.DataLoader(
@@ -60,8 +58,8 @@ def train() -> None:
     for epoch in range(n_epochs):
         loss: torch.Tensor = torch.tensor(0.0, device=device)
         for i in problem:
-            diff.set_input(i[1]())
-            loss += i[2] * i[0](diff)
+            model(i[1]())
+            loss += i[2] * i[0](model)
         optimizer.zero_grad()
         loss.backward()  # type: ignore
         optimizer.step()

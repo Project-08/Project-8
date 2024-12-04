@@ -6,18 +6,32 @@ model names may not conflict with torch.nn module names!
 import torch
 import torch.nn as nn
 from project8.neural_network import modules as mod
-from typing import Callable, Dict, Any, Optional, Self
+from project8.neural_network.utils import Params
+from typing import Callable, Dict, Any, Optional, Self, TypedDict
+
 
 
 class NN(nn.Module):
-    def __init__(self, layers: nn.ModuleList) -> None:
+    """
+    Sequential model class.
+    saves input, output, and cache to be able to compute derivatives.
+    """
+    def __init__(self, layers: nn.ModuleList, device: str | torch.device = 'cpu') -> None:
         super().__init__()
         self.layers: nn.ModuleList = layers
+        self.double()
+        self.to(device)
+        self.input: torch.Tensor = torch.Tensor()
+        self.output: torch.Tensor = torch.Tensor()
+        self.cache: dict[str, torch.Tensor] = {}
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        for layer in self.layers:
-            x = layer(x)
-        return x
+        self.cache = {}
+        self.input = x
+        self.output = self.layers[0](x)
+        for layer in self.layers[1:]:
+            self.output = layer(self.output)
+        return self.output
 
     def initialize_weights(
             self,
@@ -53,7 +67,6 @@ class NN(nn.Module):
     def definition(self) -> str:
         """
         Should return a string that can be evaluated to initialize a model.
-
         """
         out = self.__class__.__name__ + '(ModuleList([\n'
         for layer in self.layers:
@@ -72,14 +85,15 @@ class NN(nn.Module):
         return out[:-2] + '\n]))'
 
     @classmethod
-    def empty(cls) -> Self:
-        return cls(nn.ModuleList())
+    def empty(cls, device: str | torch.device = 'cpu') -> Self:
+        return cls(nn.ModuleList(), device)
 
     @classmethod
     def rectangular_fnn(cls,
                         n_in: int, n_out: int,
                         width: int, depth: int,
-                        act_fn: nn.Module
+                        act_fn: nn.Module,
+                        device: str | torch.device = 'cpu'
                         ) -> Self:
         layers = nn.ModuleList()
         layers.append(nn.Linear(n_in, width))
@@ -88,23 +102,56 @@ class NN(nn.Module):
             layers.append(nn.Linear(width, width))
             layers.append(act_fn)
         layers.append(nn.Linear(width, n_out))
-        return cls(layers)
+        return cls(layers, device)
 
     @classmethod
     def drm(cls,
-            dim_in: int, dim_out: int,
+            n_in: int, n_out: int,
             width: int, n_blocks: int,
             act_fn: nn.Module = mod.PolyReLU(3),
-            n_linear_drm: int = 2) -> Self:
+            n_linear_drm: int = 2,
+            device: str | torch.device = 'cpu'
+            ) -> Self:
         layers = nn.ModuleList()
-        if dim_in > width:
-            layers.append(nn.Linear(dim_in, width))
-        elif dim_in < width:
+        if n_in > width:
+            layers.append(nn.Linear(n_in, width))
+        elif n_in < width:
             layers.append(mod.Padding(width))
         for i in range(n_blocks):
             layers.append(mod.DRM_block(width, act_fn, n_linear_drm))
-        layers.append(nn.Linear(width, dim_out))
-        return cls(layers)
+        layers.append(nn.Linear(width, n_out))
+        return cls(layers, device)
+
+    @classmethod
+    def from_param_dict(cls, params: Params) -> Self:
+        match params['model_constructor']:
+            case 'empty':
+                return cls.empty(
+                    params['device']
+                )
+            case 'rectangular_fnn':
+                model = cls.rectangular_fnn(
+                    params['n_in'], params['n_out'],
+                    params['width'], params['depth'],
+                    params['act_fn'], params['device']
+                )
+            case 'drm':
+                model = cls.drm(
+                    params['n_in'], params['n_out'],
+                    params['width'], params['n_blocks'],
+                    params['act_fn'], params['n_linear_drm'],
+                    params['device']
+                )
+            case _:
+                raise ValueError('Invalid model_constructor_name')
+        if 'weight_init_fn' in params and 'bias_init_fn' in params:
+            model.initialize_weights(
+                params['weight_init_fn'],
+                params['bias_init_fn'],
+                weight_init_kwargs=params['weight_init_kwargs'],
+                bias_init_kwargs=params['bias_init_kwargs']
+            )
+        return model
 
 
 def main() -> None:
