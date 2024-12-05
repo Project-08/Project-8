@@ -6,6 +6,20 @@ import torch
 import matplotlib.pyplot as plt
 from project8.neural_network.implementations import param_dicts
 
+# could also do something like this:
+class pinn_2d_poisson:
+    def __init__(self, params: utils.Params) -> None:
+        self.device = utils.get_device()
+        self.hyperparams: utils.Params = params
+        self.model = models.NN.from_param_dict(self.hyperparams)
+        self.trnr = trainer.trainer(self.model, self.hyperparams, verbose=True)
+
+    def train(self) -> None:
+        self.trnr.train()
+
+    def test(self) -> float:
+        return self.trnr.loss().item()
+
 
 def main() -> None:
     hyperparams = param_dicts.pinn_2d_laplacian()
