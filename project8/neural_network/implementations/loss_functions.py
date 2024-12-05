@@ -26,7 +26,7 @@ def wave_source(input: torch.Tensor) -> torch.Tensor:
     for i in a:
         f += torch.exp(
             -alpha * (input[:, 0] - i[0]) ** 2 - alpha * (
-                        input[:, 1] - i[1]) ** 2)
+                    input[:, 1] - i[1]) ** 2)
     return (f * torch.sin(omega * input[:, 2])).unsqueeze(1)
 
 

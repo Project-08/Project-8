@@ -78,7 +78,7 @@ class Sin(AbstractModule):
         return torch.sin(x * self.freq)
 
 
-class FourierActivation(AbstractModule):
+class FourierLike(AbstractModule):
     """
     Fourier series like activation function with learnable parameters
     for every neuron: x = a*sin(f*x + p), where a, f, p are learnable
@@ -93,3 +93,20 @@ class FourierActivation(AbstractModule):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.sin(self.freqs * x + self.phases) * self.amps
+
+
+class GaussianLike(AbstractModule):
+    """
+    Gaussian like activation function with learnable parameters
+    for every neuron: x = a*exp(-b*(x - c)^2), where a, b, c are learnable
+    """
+
+    def __init__(self, width: int) -> None:
+        super().__init__(width=width)
+        self.width: int = width
+        self.std: nn.Parameter = nn.Parameter(torch.randn(1, width))
+        self.mean: nn.Parameter = nn.Parameter(torch.randn(1, width))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.exp(-0.5 * ((x - self.mean) / self.std) ** 2) / (
+                self.std * torch.sqrt(2 * torch.tensor(torch.pi)))

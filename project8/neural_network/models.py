@@ -10,13 +10,14 @@ from project8.neural_network.utils import Params
 from typing import Callable, Dict, Any, Optional, Self, TypedDict
 
 
-
 class NN(nn.Module):
     """
     Sequential model class.
     saves input, output, and cache to be able to compute derivatives.
     """
-    def __init__(self, layers: nn.ModuleList, device: str | torch.device = 'cpu') -> None:
+
+    def __init__(self, layers: nn.ModuleList,
+                 device: str | torch.device = 'cpu') -> None:
         super().__init__()
         self.layers: nn.ModuleList = layers
         self.double()

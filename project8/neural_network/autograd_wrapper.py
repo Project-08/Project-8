@@ -21,7 +21,7 @@ class Differentiator:
 
     def __init__(self, function_to_attach: Callable[
         [torch.Tensor], torch.Tensor]
-    ) -> None:
+                 ) -> None:
         self.function = function_to_attach
         self.__input: torch.Tensor = torch.Tensor()
         self.__output: torch.Tensor = torch.Tensor()

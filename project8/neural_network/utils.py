@@ -272,6 +272,11 @@ def format_time(t: float) -> str:
 
 
 class Params(TypedDict, total=False):
+    """
+    Parameters fully defining a problem, model and training setup.
+    To improve functionality and take different hyperparameters,
+    change or create new model and trainer class.
+    """
     device: torch.device | str
     # training params
     n_epochs: int
@@ -284,15 +289,15 @@ class Params(TypedDict, total=False):
     # model params
     model_constructor: str
     weight_init_fn: Callable[
-                     [torch.Tensor, Any], torch.Tensor
-                 ] | Callable[
-                     [torch.Tensor], torch.Tensor
-                 ]
+                        [torch.Tensor, Any], torch.Tensor
+                    ] | Callable[
+                        [torch.Tensor], torch.Tensor
+                    ]
     bias_init_fn: Callable[
-                   [torch.Tensor, Any], torch.Tensor
-               ] | Callable[
-                   [torch.Tensor], torch.Tensor
-               ]
+                      [torch.Tensor, Any], torch.Tensor
+                  ] | Callable[
+                      [torch.Tensor], torch.Tensor
+                  ]
     weight_init_kwargs: Optional[Dict[str, Any]]
     bias_init_kwargs: Optional[Dict[str, Any]]
     # rectangular_fnn

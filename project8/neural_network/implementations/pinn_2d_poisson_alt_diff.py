@@ -24,7 +24,7 @@ def pinn_bndry_loss(model: models.NN) -> torch.Tensor:
 def train() -> None:
     device = utils.get_device()
     # init model
-    act_fn = modules.FourierActivation(64)
+    act_fn = modules.FourierLike(64)
     model = models.NN.rectangular_fnn(2, 1, 64, 9, act_fn=act_fn)
     logging.info(model)
     model.to(device)

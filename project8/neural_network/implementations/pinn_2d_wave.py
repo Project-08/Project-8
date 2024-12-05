@@ -58,10 +58,14 @@ def pinn_wave_ic(diff: aw.Differentiator) -> torch.Tensor:
     return diff.output().pow(2).mean()
 
 
+def fit_to_source(diff: aw.Differentiator) -> torch.Tensor:
+    return (diff.output() - F(diff.input())).pow(2).mean()
+
+
 def train() -> None:
     device = utils.get_device()
     # init model
-    act_fn = modules.FourierActivation(64)
+    act_fn = torch.nn.Tanh()
     model = models.NN.rectangular_fnn(3, 1, 64, 9, act_fn=act_fn)
     logging.info(model)
     model.to(device)
@@ -69,15 +73,16 @@ def train() -> None:
     model.initialize_weights(
         torch.nn.init.xavier_uniform_,
         torch.nn.init.zeros_,
-        weight_init_kwargs={'gain': 0.5})
+        weight_init_kwargs={'gain': 0.7})
 
     # training params
-    n_epochs = 5000
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    n_epochs = 10000
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-2)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.99)
     diff = aw.Differentiator(function_to_attach=model)
-    coord_space = utils.ParameterSpace([[0, 10], [0, 5], [0, 4]], device)
+    coord_space = utils.ParameterSpace([[0, 5], [0, 2.5], [0, 1]], device)
     domain_data_loader = utils.DataLoader(
-        coord_space.rand(100000), 3000, device=device,
+        coord_space.rand(100_000_000), 10000, device=device,
         output_requires_grad=True)
     bc_select = torch.tensor([[1, 1], [1, 1], [0, 0]], device=device,
                              dtype=torch.float64)
@@ -89,28 +94,37 @@ def train() -> None:
     ic_data_loader = utils.DataLoader(
         coord_space.select_bndry_rand(100000, ic_select), 300, device=device,
         output_requires_grad=True)
+    grid_dl = utils.DataLoader(coord_space.fgrid(50), 50, device=device,
+                               output_requires_grad=True)
     problem: list[list[Any]] = [
         [pinn_wave_pde, domain_data_loader, 1],
         [pinn_wave_bc, bc_data_loader, 1],
         [pinn_wave_ic, ic_data_loader, 1]
     ]
+    problem_2: list[list[Any]] = [
+        [fit_to_source, domain_data_loader, 1]
+    ]
 
     # train
     for epoch in range(n_epochs):
         loss: torch.Tensor = torch.tensor(0.0, device=device)
-        for i in problem:
+        for i in problem_2:
             diff.set_input(i[1]())
             loss += i[2] * i[0](diff)
         optimizer.zero_grad()
         loss.backward()  # type: ignore
         optimizer.step()
+        lr_scheduler.step()
         if epoch % 100 == 0:
-            print(f'Epoch {epoch}, loss: {loss.item()}')
+            print(
+                f'Epoch {epoch}, loss: {loss.item()}, '
+                f'lr: {lr_scheduler.get_last_lr()}')
 
     # plot output
     grid = coord_space.fgrid(50)
     model.eval()
     output = model(grid)
+    source_fn = F(grid)
     x, y, t = coord_space.regrid(grid)
     f = coord_space.regrid(output)[0]
 

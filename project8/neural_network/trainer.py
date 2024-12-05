@@ -5,7 +5,6 @@ import logging
 from typing import Any, Callable, TypedDict, Optional
 
 
-
 class trainer:
     def __init__(self, model: NN, params: utils.Params,
                  verbose: bool = False
