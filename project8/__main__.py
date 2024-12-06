@@ -1,8 +1,12 @@
 import argparse
+import gc
 import logging
 
-from .bench.sparse import bench_solve_tri
-from .sparse import CuPySolve, CuSparseTriSolve, TriSolve
+import pyamgx
+
+from project8.bench.sparse import bench_solve_tri
+from project8.sparse import (AMGX_CONFIGS, AmgXSolve, CuPySolve,
+                             CuSPARSETriSolve, TriSolve)
 
 
 def main() -> None:
@@ -34,15 +38,26 @@ def main() -> None:
             for solver in args.solvers:
                 match solver:
                     case "cuSPARSE":
-                        solvers.append(CuSparseTriSolve())
+                        solvers.append(CuSPARSETriSolve())
                     case "CuPy":
                         solvers.append(CuPySolve())
+                    case "AmgX":
+                        solvers.extend(
+                            (AmgXSolve(config) for config in AMGX_CONFIGS))
+                    case _ if solver in AMGX_CONFIGS:
+                        solvers.append(AmgXSolve(solver))
+                    case _:
+                        raise ValueError(f"Unrecognized solver: {solver}")
 
             bench_solve_tri(range(args.min, args.max,
                                   (args.max - args.min) // args.steps),
                             solvers=solvers,
                             attempts=args.attempts,
                             plot=args.plot)
+            del solvers
+
+    gc.collect()
+    pyamgx.finalize()
 
 
 if __name__ == "__main__":

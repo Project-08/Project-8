@@ -6,8 +6,8 @@ import cupy as cp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..perf import Perf, average_performance
-from ..sparse import TriSolve
+from project8.perf import Perf, average_performance
+from project8.sparse import TriSolve
 
 
 def bench_solve_tri(sizes: Sequence[int],
@@ -21,7 +21,7 @@ def bench_solve_tri(sizes: Sequence[int],
         dlu = -1 * cp.ones(n - 1)
 
         for solver in solvers:
-            solver_name = type(solver).__name__
+            solver_name = str(solver)
             b = cp.random.rand(n)
             perfs = []
             for i in range(attempts + 1):
@@ -32,46 +32,72 @@ def bench_solve_tri(sizes: Sequence[int],
             results[solver_name].append(perfs)
 
     if plot:
-        plt.figure(figsize=(12, 6))
+        plt.figure()
+        colormap = plt.cm.get_cmap('gist_rainbow', len(solvers))
 
-        for solver in solvers:
-            solver_name = type(solver).__name__
+        for (i, solver) in enumerate(solvers):
+            solver_name = str(solver)
             solver_perfs = results[solver_name]
+            color = colormap(i / len(solvers))
             avg_perfs = [average_performance(perfs) for perfs in solver_perfs]
 
             scatter_x = [n for n in sizes for _ in range(attempts)]
 
-            plt.subplot(1, 2, 1)
+            plt.subplot(1, 3, 1)
             plt.scatter(
                 scatter_x,
                 [perf.total_ns for perfs in solver_perfs for perf in perfs],
                 label=solver_name,
-                marker='x')
+                marker='x',
+                color=color)
             plt.plot(sizes, [perf.total_ns for perf in avg_perfs],
                      label=f'{solver_name} (mean)',
-                     marker='o')
+                     marker='o',
+                     color=color)
             plt.xlabel('Matrix Size (n)')
             plt.ylabel('Total Time (ns)')
             plt.title('Performance of Solvers (Total Time vs. Matrix Size)')
-            plt.legend()
+            plt.legend(fontsize="xx-small")
             plt.grid(True)
 
-            plt.subplot(1, 2, 2)
+            plt.subplot(1, 3, 2)
             plt.scatter(scatter_x,
                         np.array([
                             perf.gpu_ms for perfs in solver_perfs
                             for perf in perfs
                         ]),
                         label=solver_name,
-                        marker='x')
+                        marker='x',
+                        color=color)
             plt.plot(sizes,
                      np.array([perf.gpu_ms for perf in avg_perfs]),
                      label=f'{solver_name} (mean)',
-                     marker='o')
+                     marker='o',
+                     color=color)
             plt.xlabel('Matrix Size (n)')
             plt.ylabel('GPU Time (ms)')
             plt.title('Performance of Solvers (GPU Time vs. Matrix Size)')
-            plt.legend()
+            plt.legend(fontsize="xx-small")
+            plt.grid(True)
+
+            plt.subplot(1, 3, 3)
+            plt.scatter(scatter_x,
+                        np.array([
+                            perf.buffer_size for perfs in solver_perfs
+                            for perf in perfs
+                        ]),
+                        label=solver_name,
+                        marker='x',
+                        color=color)
+            plt.plot(sizes,
+                     np.array([perf.buffer_size for perf in avg_perfs]),
+                     label=f'{solver_name} (mean)',
+                     marker='o',
+                     color=color)
+            plt.xlabel('Matrix Size (n)')
+            plt.ylabel('Buffer Size (B)')
+            plt.title('Performance of Solvers (Memory Usage vs. Matrix Size)')
+            plt.legend(fontsize="xx-small")
             plt.grid(True)
 
         plt.show()
