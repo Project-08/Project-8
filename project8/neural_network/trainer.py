@@ -40,21 +40,19 @@ class trainer:
             out += self.eval_loss_fn(i)
         return out
 
+    def step(self) -> None:
+        self.optimizer.zero_grad()
+        loss = self.loss()
+        loss.backward()  # type: ignore
+        self.loss_history.append(loss.item())
+        self.optimizer.step()
+
     def train(self) -> None:
         self.timer.start()
-        for epoch in range(self.params['n_epochs']):
-            self.optimizer.zero_grad()
-            loss = self.loss()
-            loss.backward()  # type: ignore
-            self.loss_history.append(loss.item())
-            self.optimizer.step()
-            if self.verbose and (
-                    epoch % 100 == 0 or epoch == self.params['n_epochs'] - 1):
+        for epoch in range(1, self.params['n_epochs']+1):
+            self.step()
+            if (epoch % 100 == 0) and self.verbose:
                 print(f'Epoch: {epoch}, '
-                      f'Loss: {self.loss().item():.4f}, '
+                      f'Loss: {self.loss_history[-1]:.4f}, '
                       f'Time: {utils.format_time(self.timer.elapsed())}')
         self.timer.stop()
-        if self.verbose:
-            print(f'Training complete. '
-                  f'Time: {utils.format_time(self.timer.elapsed())}, '
-                  f'final loss: {self.loss().item()}')

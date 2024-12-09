@@ -55,13 +55,41 @@ def pinn_2d_laplacian() -> utils.Params:
         'n_epochs': 5000,
         'loss_fn_batch_sizes': [100, 50],
         # problem definition
-        'loss_fns': [lf.PINN.nd_laplacian, lf.dirichlet_bc_penalty],
+        'loss_fns': [
+            lf.PINN.nd_laplacian(lf.sinxy_source),
+            lf.dirichlet_bc_penalty
+        ],
         'loss_weights': [1, 10],
         'loss_fn_data': [
             coord_space.rand(100000), coord_space.bndry_rand(100000)
         ],
     }
     return hyperparams
+
+
+def nmfde_a3() -> utils.Params:
+    hyperparams = default()
+    hyperparams['device'] = utils.get_device()
+    hyperparams['n_epochs'] = 5000
+    hyperparams['model_constructor'] = 'rectangular_fnn'
+    hyperparams['n_in'] = 2
+    hyperparams['n_out'] = 1
+    hyperparams['width'] = 64
+    hyperparams['depth'] = 9
+    hyperparams['act_fn'] = modules.FourierLike(64)
+    coord_space = utils.ParameterSpace([[0, 10], [0, 5]],
+                                       hyperparams['device'])
+    hyperparams['loss_fns'] = [
+        lf.PINN.nd_laplacian(lf.nmfde_a3_source),
+        lf.dirichlet_bc_penalty
+    ]
+    hyperparams['loss_weights'] = [1, 10]
+    hyperparams['loss_fn_data'] = [
+        coord_space.rand(100000), coord_space.bndry_rand(100000)
+    ]
+    hyperparams['loss_fn_batch_sizes'] = [300, 100]
+    return hyperparams
+
 
 
 def drm_2d_laplacian() -> utils.Params:
@@ -112,19 +140,19 @@ def pinn_2d_wave() -> utils.Params:
         'depth': 7,
         'weight_init_fn': torch.nn.init.xavier_uniform_,
         'bias_init_fn': torch.nn.init.zeros_,
-        'weight_init_kwargs': {'gain': 0.5},
+        'weight_init_kwargs': {'gain': 0.7},
         'bias_init_kwargs': {},
         # training params
         'optimizer': torch.optim.Adam,
-        'lr': 1e-3,
-        'n_epochs': 5000,
-        'loss_fn_batch_sizes': [1000, 800],
+        'lr': 1e-2,
+        'n_epochs': 1000,
+        'loss_fn_batch_sizes': [10000, 3000],
         # problem definition
-        'loss_fns': [lf.PINN.wave_2d, lf.dirichlet_bc_penalty],
-        'loss_weights': [1, 10],
+        'loss_fns': [lf.PINN.wave_2d(lf.nmfde_a4_wave), lf.dirichlet_bc_penalty],
+        'loss_weights': [100, 1000],
         'loss_fn_data': [
-            coord_space.rand(1000000),
-            coord_space.select_bndry_rand(1000000, boundary_select)
+            coord_space.rand(10_000_000),
+            coord_space.select_bndry_rand(1_000_000, boundary_select)
         ],
     }
     return hyperparams

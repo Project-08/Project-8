@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
+import matplotlib.animation as animation # type: ignore
 from warnings import warn
 import time
 import os
@@ -83,10 +84,43 @@ def plot_plane(x: Union[torch.Tensor, np.ndarray[Any, Any]],
     ax.set_title(title)
     plt.savefig(plot_folder + '/' + filename)
 
+def anim_2d(x: Union[torch.Tensor, np.ndarray[Any, Any]],
+            y: Union[torch.Tensor, np.ndarray[Any, Any]],
+            t: Union[torch.Tensor, np.ndarray[Any, Any]],
+            f: Union[torch.Tensor, np.ndarray[Any, Any]], title: str,
+            fig_id: int = 0,
+            filename: str = '') -> None:
+    x, y, t, f = if_tensors_to_numpy(x, y, t, f)
+    if filename == '':
+        filename = title + '.gif'
+    fig = plt.figure(fig_id)
+    domain = (x.min(), x.max(), y.min(), y.max())
+    im = plt.imshow(f[0, :, :], extent=domain, origin='lower')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    tlt = plt.title(title)
+    if domain[1] - domain[0] < 1.1 * (domain[3] - domain[2]):
+        plt.colorbar(orientation='vertical')
+    else:
+        plt.colorbar(orientation='horizontal')
+    im.set_clim(-np.abs(f).max(), np.abs(f).max())
+    def animate(frame: int) -> Any:
+        data = f[frame, :, :]
+        current_time = t[frame, :, :].mean()
+        im.set_array(data)
+        tlt.set_text(title + f', t = {current_time:.2f}s')
+        return im,
+    t0 = t.min()
+    t1 = t.max()
+    interval = 1000 * (t1 - t0) / t.shape[0]
+    anim = animation.FuncAnimation(fig, animate, frames=t.shape[0],
+                                   interval=interval, blit=True)
+    plt.show()
+
 
 class ParameterSpace:
     def __init__(self, domain: Iterable[Iterable[float]],
-                 device: str = 'cpu') -> None:
+                 device: str | torch.device = 'cpu') -> None:
         self.domain = torch.tensor(domain, dtype=torch.float64, device=device)
         self.device = device
         self.center = (self.domain[:, 1] + self.domain[:, 0]) / 2
@@ -94,6 +128,12 @@ class ParameterSpace:
         self.length = self.domain[:, 1] - self.domain[:, 0]
         self.uniform_bnrdy_prob = 1 - self.length / self.length.sum()
         self.size = self.domain.shape[0]
+
+    @staticmethod
+    def from_rand_data(data: torch.Tensor) -> 'ParameterSpace':
+        domain = torch.stack([data.min(0).values, data.max(0).values]).T
+        device = data.device
+        return ParameterSpace(domain, device)
 
     def rand(self, n: int) -> torch.Tensor:
         rand = torch.rand(n, self.domain.shape[0], device=self.device) * 2 - 1

@@ -29,6 +29,9 @@ def sourcefunc_wave(x: torch.Tensor, y: torch.Tensor, t: torch.Tensor,
     f = sourcefunc_A4(x, y, alpha)
     return f * torch.sin(omega * t)
 
+def simple_source(x: torch.Tensor, y: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+    return torch.sin(3*t*x*y)
+
 
 def F(coords: torch.Tensor) -> torch.Tensor:
     return sourcefunc_wave(coords[:, 0], coords[:, 1], coords[:, 2]).unsqueeze(
@@ -65,7 +68,7 @@ def fit_to_source(diff: aw.Differentiator) -> torch.Tensor:
 def train() -> None:
     device = utils.get_device()
     # init model
-    act_fn = torch.nn.Tanh()
+    act_fn = modules.FourierLike(64)
     model = models.NN.rectangular_fnn(3, 1, 64, 9, act_fn=act_fn)
     logging.info(model)
     model.to(device)
@@ -80,26 +83,18 @@ def train() -> None:
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-2)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.99)
     diff = aw.Differentiator(function_to_attach=model)
-    coord_space = utils.ParameterSpace([[0, 5], [0, 2.5], [0, 1]], device)
+    coord_space = utils.ParameterSpace([[0, 5], [0, 2.5], [0, 5]], device)
     domain_data_loader = utils.DataLoader(
-        coord_space.rand(100_000_000), 10000, device=device,
+        coord_space.rand(10_000_000), 10000, device=device,
         output_requires_grad=True)
-    bc_select = torch.tensor([[1, 1], [1, 1], [0, 0]], device=device,
+    bc_select = torch.tensor([[1, 1], [1, 1], [1, 0]], device=device,
                              dtype=torch.float64)
     bc_data_loader = utils.DataLoader(
-        coord_space.select_bndry_rand(100000, bc_select), 800, device=device,
+        coord_space.select_bndry_rand(1_000_000, bc_select), 5000, device=device,
         output_requires_grad=True)
-    ic_select = torch.tensor([[0, 0], [0, 0], [1, 0]], device=device,
-                             dtype=torch.float64)
-    ic_data_loader = utils.DataLoader(
-        coord_space.select_bndry_rand(100000, ic_select), 300, device=device,
-        output_requires_grad=True)
-    grid_dl = utils.DataLoader(coord_space.fgrid(50), 50, device=device,
-                               output_requires_grad=True)
     problem: list[list[Any]] = [
         [pinn_wave_pde, domain_data_loader, 1],
         [pinn_wave_bc, bc_data_loader, 1],
-        [pinn_wave_ic, ic_data_loader, 1]
     ]
     problem_2: list[list[Any]] = [
         [fit_to_source, domain_data_loader, 1]
@@ -108,7 +103,7 @@ def train() -> None:
     # train
     for epoch in range(n_epochs):
         loss: torch.Tensor = torch.tensor(0.0, device=device)
-        for i in problem_2:
+        for i in problem:
             diff.set_input(i[1]())
             loss += i[2] * i[0](diff)
         optimizer.zero_grad()
@@ -127,17 +122,10 @@ def train() -> None:
     source_fn = F(grid)
     x, y, t = coord_space.regrid(grid)
     f = coord_space.regrid(output)[0]
+    source = coord_space.regrid(source_fn)[0]
 
-    t_id = 0
-    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :],
-                  title='output_wave1', fig_id=2)
-    t_id = 20
-    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :],
-                  title='output_wave2', fig_id=3)
-    t_id = 49
-    utils.plot_2d(x[t_id, :, :], y[t_id, :, :], f[t_id, :, :],
-                  title='output_wave3', fig_id=4)
-
+    utils.anim_2d(x, y, t, f, title='output_wave', fig_id=5)
+    utils.anim_2d(x, y, t, source, title='output_wave', fig_id=5)
 
 def main() -> None:
     tmr = utils.Timer()
