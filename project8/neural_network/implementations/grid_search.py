@@ -29,19 +29,24 @@ class GridSearch:
                     
         return best_model, best_params, best_loss
 
+# Early termination
+# best loss: last epoch loss?
+# Do we store best loss model parameters?
+# We probably want to return the 5-10 best models parameters and their losses to compare the impact of hyperparameters
+
 # Example usage  
 def main():
     hyperparameters = {
-        'n_inputs': [3],
+        'n_inputs': [2],
         'n_outputs': [1],
-        # 'width': [20],
+        'width': [20],
         # 'n_blocks': [4],
         'lr': [1e-3],
         'n_epochs': [5000],
         # 'loss_weights': [(1, 100), (1, 50)],
     }
     # Only the specified hyperparameters will be varied
-    best_model, best_params, best_loss = GridSearch.grid_search(hyperparameters, [PINN2DWave])
+    best_model, best_params, best_loss = GridSearch.grid_search(hyperparameters, [PINN2DPoisson, DRM2DPoisson])
 
     print("\nBest Model:", best_model)
     print("Best Hyperparameters:", best_params)
