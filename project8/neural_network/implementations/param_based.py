@@ -6,12 +6,12 @@ from project8.neural_network.implementations import param_dicts
 
 def main() -> None:
     hyperparams = param_dicts.drm_2d_laplacian()
-    coord_space = utils.ParameterSpace.from_rand_data(
-        hyperparams['loss_fn_data'][0])
     model = models.NN.from_param_dict(hyperparams)
     trnr = trainer.trainer(model, hyperparams, verbose=True)
     trnr.train()
     # plot output
+    coord_space = utils.ParameterSpace.from_rand_data(
+        hyperparams['loss_fn_data'][0])
     if hyperparams['n_in'] == 2 and hyperparams['n_out'] == 1:
         grid = coord_space.fgrid(200)
         output = model(grid)

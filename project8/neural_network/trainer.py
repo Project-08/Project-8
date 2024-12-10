@@ -1,5 +1,6 @@
 from project8.neural_network import utils
 from project8.neural_network.models import NN
+from copy import deepcopy
 import torch
 
 
@@ -26,6 +27,9 @@ class trainer:
         self.loss_weights = params['loss_weights']
         self.device = params['device']
         self.loss_history: list[float] = []
+        self.best_state = deepcopy(self.model.state_dict())
+        self.best_loss = float('inf')
+        self.best_epoch = 0
         self.timer = utils.Timer()
 
     def eval_loss_fn(self, i: int) -> torch.Tensor:
@@ -42,6 +46,10 @@ class trainer:
         self.optimizer.zero_grad()
         loss = self.loss()
         loss.backward()  # type: ignore
+        if loss.item() < self.best_loss:
+            self.best_epoch = len(self.loss_history)
+            self.best_loss = loss.item()
+            self.best_state = deepcopy(self.model.state_dict())
         self.loss_history.append(loss.item())
         self.optimizer.step()
 
@@ -51,6 +59,10 @@ class trainer:
             self.step()
             if (epoch % 100 == 0) and self.verbose:
                 print(f'Epoch: {epoch}, '
-                      f'Loss: {self.loss_history[-1]:.4f}, '
+                      f'Loss: {self.loss_history[-1]:.6f}, '
                       f'Time: {utils.format_time(self.timer.elapsed())}')
+        self.model.load_state_dict(self.best_state)
+        if self.verbose:
+            print(f'Best loss: {self.best_loss:.6f}'
+                  f' at epoch {self.best_epoch}')
         self.timer.stop()
