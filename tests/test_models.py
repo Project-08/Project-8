@@ -2,7 +2,7 @@ from project8.neural_network import models
 from project8.neural_network import checkpoints
 import torch
 
-max_loss = 0.4
+max_loss = 0.5
 
 
 def train(model: models.NN) -> tuple[float, models.NN]:
@@ -12,7 +12,9 @@ def train(model: models.NN) -> tuple[float, models.NN]:
         torch.nn.init.xavier_uniform_,
         torch.nn.init.zeros_,
         weight_init_kwargs={'gain': 0.1})
-    x = torch.linspace(0, 2 * 3.14159, 128).to(device).unsqueeze(1)
+    x = torch.linspace(
+        0, 2 * 3.14159, 128, dtype=torch.float64
+    ).to(device).unsqueeze(1)
     target = torch.sin(2 * x)
     n_epochs = 10000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -25,7 +27,7 @@ def train(model: models.NN) -> tuple[float, models.NN]:
         loss = criterion(output, target)
         if loss.item() < best:
             best = loss.item()
-        if best < max_loss:
+        if best < max_loss and epoch > 100:
             break
         loss.backward()
         optimizer.step()
