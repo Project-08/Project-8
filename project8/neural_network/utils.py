@@ -4,7 +4,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
-import matplotlib.animation as animation # type: ignore
+import matplotlib.animation as animation  # type: ignore
 from warnings import warn
 import time
 import os
@@ -84,6 +84,7 @@ def plot_plane(x: Union[torch.Tensor, np.ndarray[Any, Any]],
     ax.set_title(title)
     plt.savefig(plot_folder + '/' + filename)
 
+
 def anim_2d(x: Union[torch.Tensor, np.ndarray[Any, Any]],
             y: Union[torch.Tensor, np.ndarray[Any, Any]],
             t: Union[torch.Tensor, np.ndarray[Any, Any]],
@@ -95,27 +96,50 @@ def anim_2d(x: Union[torch.Tensor, np.ndarray[Any, Any]],
         filename = title + '.gif'
     fig = plt.figure(fig_id)
     domain = (x.min(), x.max(), y.min(), y.max())
-    im = plt.imshow(f[0, :, :], extent=domain, origin='lower')
     plt.xlabel('x')
     plt.ylabel('y')
     tlt = plt.title(title)
+    im = plt.imshow(f[0, :, :], extent=domain, origin='lower')
     if domain[1] - domain[0] < 1.1 * (domain[3] - domain[2]):
         plt.colorbar(orientation='vertical')
     else:
         plt.colorbar(orientation='horizontal')
     im.set_clim(-np.abs(f).max(), np.abs(f).max())
+
     def animate(frame: int) -> Any:
         data = f[frame, :, :]
         current_time = t[frame, :, :].mean()
         im.set_array(data)
         tlt.set_text(title + f', t = {current_time:.2f}s')
         return im,
+
     t0 = t.min()
     t1 = t.max()
     interval = 1000 * (t1 - t0) / t.shape[0]
     anim = animation.FuncAnimation(fig, animate, frames=t.shape[0],
-                                   interval=interval, blit=True)
-    plt.show()
+                                   interval=interval, blit=False)
+    writer = animation.PillowWriter(fps=15,
+                                    metadata=dict(artist='Me'),
+                                    bitrate=1800)
+    anim.save(plot_folder + '/' + filename, writer=writer)
+
+
+def scatter_3d(x: Union[torch.Tensor, np.ndarray[Any, Any]],
+               y: Union[torch.Tensor, np.ndarray[Any, Any]],
+               z: Union[torch.Tensor, np.ndarray[Any, Any]],
+               title: str, fig_id: int = 0,
+               filename: str = '') -> None:
+    x, y, z = if_tensors_to_numpy(x, y, z)
+    if filename == '':
+        filename = title + '.png'
+    fig = plt.figure(fig_id)
+    ax: Axes3D = fig.add_subplot(111, projection='3d')
+    ax.scatter(x, y, z)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    ax.set_title(title)
+    plt.savefig(plot_folder + '/' + filename)
 
 
 class ParameterSpace:

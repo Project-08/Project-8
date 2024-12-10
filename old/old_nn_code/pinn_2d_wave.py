@@ -1,7 +1,7 @@
 from project8.neural_network import utils
 from project8.neural_network import modules
 from project8.neural_network import models
-from project8.neural_network import autograd_wrapper as aw
+from old.old_nn_code import autograd_wrapper as aw
 import torch
 import logging
 from typing import Any

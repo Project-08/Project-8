@@ -57,7 +57,7 @@ def pinn_2d_laplacian() -> utils.Params:
         # problem definition
         'loss_fns': [
             lf.PINN.nd_laplacian(lf.sinxy_source),
-            lf.dirichlet_bc_penalty
+            lf.General.dirichlet_bc_penalty()
         ],
         'loss_weights': [1, 10],
         'loss_fn_data': [
@@ -81,7 +81,7 @@ def nmfde_a3() -> utils.Params:
                                        hyperparams['device'])
     hyperparams['loss_fns'] = [
         lf.PINN.nd_laplacian(lf.nmfde_a3_source),
-        lf.dirichlet_bc_penalty
+        lf.General.dirichlet_bc_penalty()
     ]
     hyperparams['loss_weights'] = [1, 10]
     hyperparams['loss_fn_data'] = [
@@ -115,7 +115,10 @@ def drm_2d_laplacian() -> utils.Params:
         'n_epochs': 5000,
         'loss_fn_batch_sizes': [1000, 500],
         # problem definition
-        'loss_fns': [lf.DRM.nd_laplacian, lf.dirichlet_bc_penalty],
+        'loss_fns': [
+            lf.DRM.nd_laplacian(lf.sinxy_source),
+            lf.General.dirichlet_bc_penalty()
+        ],
         'loss_weights': [1, 10],
         'loss_fn_data': [
             coord_space.rand(100000), coord_space.bndry_rand(100000)
@@ -133,23 +136,25 @@ def pinn_2d_wave() -> utils.Params:
         'device': device,
         # model params
         'model_constructor': 'rectangular_fnn',
-        'act_fn': torch.nn.Tanh(),
+        'act_fn': torch.nn.Sigmoid(),
         'n_in': 3,
         'n_out': 1,
-        'width': 64,
-        'depth': 7,
+        'width': 1024,
+        'depth': 3,
         'weight_init_fn': torch.nn.init.xavier_uniform_,
         'bias_init_fn': torch.nn.init.zeros_,
-        'weight_init_kwargs': {'gain': 0.7},
+        'weight_init_kwargs': {'gain': 1},
         'bias_init_kwargs': {},
         # training params
-        'optimizer': torch.optim.Adam,
-        'lr': 1e-2,
-        'n_epochs': 1000,
-        'loss_fn_batch_sizes': [10000, 3000],
+        'optimizer': torch.optim.AdamW,
+        'lr': 1e-5,
+        'n_epochs': 5000,
+        'loss_fn_batch_sizes': [2000, 600],
         # problem definition
-        'loss_fns': [lf.PINN.wave_2d(lf.nmfde_a4_wave), lf.dirichlet_bc_penalty],
-        'loss_weights': [100, 1000],
+        'loss_fns': [
+            lf.PINN.nd_wave(lf.nmfde_a4_wave),
+            lf.General.dirichlet_bc_penalty()],
+        'loss_weights': [1, 10],
         'loss_fn_data': [
             coord_space.rand(10_000_000),
             coord_space.select_bndry_rand(1_000_000, boundary_select)

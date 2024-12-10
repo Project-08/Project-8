@@ -1,5 +1,5 @@
 from project8.neural_network import utils
-from project8.neural_network import autograd_wrapper as aw
+from project8.neural_network import differential_operators as diffop
 import torch
 
 
@@ -37,67 +37,77 @@ def d2fdyx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return x * 0 + 2
 
 
-def setup() -> tuple[aw.Differentiator, torch.Tensor, torch.Tensor]:
-    diff = aw.Differentiator(f)
+def setup() -> tuple[diffop.AbstractIO, torch.Tensor, torch.Tensor]:
+    io = diffop.AbstractIO()
     coord_space = utils.ParameterSpace([[-1, 1], [-1, 1]], 'cpu')
-    grid = coord_space.fgrid(10).requires_grad_(True)
-    diff.set_input(grid)
-    x = diff.input()[:, 0].unsqueeze(1)
-    y = diff.input()[:, 1].unsqueeze(1)
-    return diff, x, y
+    io.input = coord_space.fgrid(10).requires_grad_(True)
+    io.output = f(io.input)
+    x = io.input[:, 0].unsqueeze(1)
+    y = io.input[:, 1].unsqueeze(1)
+    return io, x, y
+
+
+def test_dfdx() -> None:
+    io, x, y = setup()
+    dx = diffop.partial_derivative(io, 0)
+    dx_true = dfdx(x, y)
+    assert torch.allclose(dx, dx_true, atol=1e-5)
 
 
 def test_dfdy() -> None:
-    diff, x, y = setup()
-    dy = diff(1)
+    io, x, y = setup()
+    dy = diffop.partial_derivative(io, 1)
     dy_true = dfdy(x, y)
     assert torch.allclose(dy, dy_true, atol=1e-5)
 
 
 def test_d2fdxx() -> None:
-    diff, x, y = setup()
-    d2x = diff(0, 0)
+    io, x, y = setup()
+    d2x = diffop.partial_derivative(io, 0, 0)
     d2x_true = d2fdxx(x, y)
     assert torch.allclose(d2x, d2x_true, atol=1e-5)
 
 
 def test_d3fdxxx() -> None:
-    diff, x, y = setup()
-    d3x = diff(0, 0, 0)
+    io, x, y = setup()
+    d3x = diffop.partial_derivative(io, 0, 0, 0)
     d3x_true = d3fdxxx(x, y)
     assert torch.allclose(d3x, d3x_true, atol=1e-5)
 
 
 def test_d2fdyy() -> None:
-    diff, x, y = setup()
-    d2y = diff(1, 1)
+    io, x, y = setup()
+    d2y = diffop.partial_derivative(io, 1, 1)
     d2y_true = d2fdyy(x, y)
     assert torch.allclose(d2y, d2y_true, atol=1e-5)
 
 
 def test_d2fdxy() -> None:
-    diff, x, y = setup()
-    d2xy = diff(0, 1)
+    io, x, y = setup()
+    d2xy = diffop.partial_derivative(io, 0, 1)
     d2xy_true = d2fdxy(x, y)
     assert torch.allclose(d2xy, d2xy_true, atol=1e-5)
 
 
 def test_d2fdyx() -> None:
-    diff, x, y = setup()
-    d2yx = diff(1, 0)
+    io, x, y = setup()
+    d2yx = diffop.partial_derivative(io, 1, 0)
     d2yx_true = d2fdyx(x, y)
     assert torch.allclose(d2yx, d2yx_true, atol=1e-5)
 
 
 def test_laplacian() -> None:
-    diff, x, y = setup()
-    lap = diff.laplacian()
-    lap_true = d2fdxx(x, y) + d2fdyy(x, y)
-    assert torch.allclose(lap, lap_true, atol=1e-5)
+    io, x, y = setup()
+    laplace = diffop.laplacian(io)
+    laplace_true = d2fdxx(x, y) + d2fdyy(x, y)
+    assert torch.allclose(laplace, laplace_true, atol=1e-5)
 
 
 def test_grad_div() -> None:
-    diff, x, y = setup()
-    lap = diff.divergence(diff.gradient())
-    lap_true = d2fdxx(x, y) + d2fdyy(x, y)
-    assert torch.allclose(lap, lap_true, atol=1e-5)
+    io, x, y = setup()
+    grad = diffop.gradient(io)
+    div = diffop.divergence(io, grad)
+    div_true = d2fdxx(x, y) + d2fdyy(x, y)
+    assert torch.allclose(div, div_true, atol=1e-5)
+
+

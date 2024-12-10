@@ -4,10 +4,6 @@ import torch
 from typing import Callable
 
 
-def dirichlet_bc_penalty(model: models.NN) -> torch.Tensor:
-    return model.output.pow(2).mean()
-
-
 def sinxy_source(input: torch.Tensor) -> torch.Tensor:
     return torch.sin(12 * input[:, 0] * input[:, 1]).unsqueeze(1)
 
@@ -42,6 +38,9 @@ def nmfde_a4_wave(input: torch.Tensor) -> torch.Tensor:
     return (f * torch.sin(omega * input[:, 2])).unsqueeze(1)
 
 
+def zero_source(input: torch.Tensor) -> torch.Tensor:
+    return torch.zeros_like(input[:, 0]).unsqueeze(1)
+
 class PINN:
     class nd_laplacian:
         def __init__(self, source: Callable[[torch.Tensor], torch.Tensor]) -> None:
@@ -52,7 +51,7 @@ class PINN:
             laplace = laplacian(model)
             return (laplace + f).pow(2).mean()
 
-    class wave_2d:
+    class nd_wave:
         def __init__(self, source: Callable[[torch.Tensor], torch.Tensor]) -> None:
             self.source = source
 
@@ -64,9 +63,32 @@ class PINN:
 
 
 class DRM:
-    @staticmethod
-    def nd_laplacian(model: models.NN) -> torch.Tensor:
-        grad = gradient(model)
-        f = sinxy_source(model.input)
-        return torch.mean(
-            0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * model.output)
+    class nd_laplacian:
+        def __init__(self, source: Callable[[torch.Tensor], torch.Tensor]) -> None:
+            self.source = source
+
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            grad = gradient(model)
+            f = self.source(model.input)
+            return torch.mean(
+                0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * model.output)
+
+
+class General:
+    class constant_bc_penalty:
+        def __init__(self, constant: float = 0) -> None:
+            self.target: float = constant
+
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            return (model.output - self.target).pow(2).mean()
+
+    class dirichlet_bc_penalty:
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            return model.output.pow(2).mean()
+
+    class fit_to_fn:
+        def __init__(self, fn: Callable[[torch.Tensor], torch.Tensor]) -> None:
+            self.fn = fn
+
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            return (model.output - self.fn(model.input)).pow(2).mean()

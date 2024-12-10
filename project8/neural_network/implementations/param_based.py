@@ -9,10 +9,9 @@ from project8.neural_network.implementations import param_dicts
 
 
 def main() -> None:
-    hyperparams = param_dicts.pinn_2d_wave()
+    hyperparams = param_dicts.drm_2d_laplacian()
     coord_space = utils.ParameterSpace.from_rand_data(
-        hyperparams['loss_fn_data'][1])
-    print(coord_space.domain)
+        hyperparams['loss_fn_data'][0])
     model = models.NN.from_param_dict(hyperparams)
     trnr = trainer.trainer(model, hyperparams, verbose=True)
     trnr.train()

@@ -1,11 +1,8 @@
 import numpy as np 
 import math, torch, generateData, time
 import torch.nn.functional as F
-from torch.optim.lr_scheduler import MultiStepLR, StepLR, MultiplicativeLR
+from torch.optim.lr_scheduler import MultiStepLR
 import torch.nn as nn
-import matplotlib.pyplot as plt
-import sys, os
-import writeSolution
 from areaVolume import areaVolume
 
 # Network structure
@@ -39,7 +36,7 @@ def preTrain(model,device,params,preOptimizer,preScheduler,fun):
 
     for step in range(params["preStep"]):
         # The volume integral
-        data = torch.from_numpy(generateData.sampleFromDisk10(params["radius"],params["bodyBatch"])).float().to(device)
+        data = torch.from_numpy(generateData.sampleFromDisk10(params["radius"], params["bodyBatch"])).float().to(device)
 
         output = model(data)
 
@@ -66,8 +63,8 @@ def preTrain(model,device,params,preOptimizer,preScheduler,fun):
 def train(model,device,params,optimizer,scheduler):
     model.train()
 
-    data1 = torch.from_numpy(generateData.sampleFromDisk10(params["radius"],params["bodyBatch"])).float().to(device)
-    data2 = torch.from_numpy(generateData.sampleFromSurface10(params["radius"],params["bdryBatch"])).float().to(device)
+    data1 = torch.from_numpy(generateData.sampleFromDisk10(params["radius"], params["bodyBatch"])).float().to(device)
+    data2 = torch.from_numpy(generateData.sampleFromSurface10(params["radius"], params["bdryBatch"])).float().to(device)
     x_shift = torch.from_numpy(np.eye(10)*params["diff"]).float().to(device)
     data1_shift0 = data1+x_shift[0]
     data1_shift1 = data1+x_shift[1]
@@ -128,8 +125,10 @@ def train(model,device,params,optimizer,scheduler):
             file.write(str(step+params["preStep"]+1)+" "+str(error)+"\n")
 
         if step%params["sampleStep"] == params["sampleStep"]-1:
-            data1 = torch.from_numpy(generateData.sampleFromDisk10(params["radius"],params["bodyBatch"])).float().to(device)
-            data2 = torch.from_numpy(generateData.sampleFromSurface10(params["radius"],params["bdryBatch"])).float().to(device)
+            data1 = torch.from_numpy(
+                generateData.sampleFromDisk10(params["radius"], params["bodyBatch"])).float().to(device)
+            data2 = torch.from_numpy(
+                generateData.sampleFromSurface10(params["radius"], params["bdryBatch"])).float().to(device)
 
             data1_shift0 = data1+x_shift[0]
             data1_shift1 = data1+x_shift[1]
@@ -160,7 +159,8 @@ def errorFun(output,target,params):
 def test(model,device,params):
     numQuad = params["numQuad"]
 
-    data = torch.from_numpy(generateData.sampleFromDisk10(1,numQuad)).float().to(device)
+    data = torch.from_numpy(
+        generateData.sampleFromDisk10(1, numQuad)).float().to(device)
     output = model(data)
     target = exact(params["radius"],data).to(device)
 
