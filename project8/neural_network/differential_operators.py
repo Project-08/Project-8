@@ -1,7 +1,8 @@
 import torch
 from torch.autograd import grad
 from project8.neural_network.models import NN
-from typing import Dict, Callable
+from typing import Dict
+
 
 class AbstractIO:
     """
@@ -10,10 +11,12 @@ class AbstractIO:
     input: torch.Tensor
     output: torch.Tensor
     cache: Dict[str, torch.Tensor]
+
     def __init__(self) -> None:
         self.cache = {}
         self.input = torch.Tensor()
         self.output = torch.Tensor()
+
 
 """
 set type hint of 'io' for all functions
@@ -59,14 +62,6 @@ def partial_derivative(
             )[0]
         diff = io.cache[key][:, in_dim_indexes[i]]
     return diff.unsqueeze(1)
-
-
-def pd(
-        io: arg_type,
-        *in_dim_indexes: int,
-        out_dim_index: int = 0
-) -> torch.Tensor:
-    return partial_derivative(io, *in_dim_indexes, out_dim_index=out_dim_index)
 
 
 def divergence(

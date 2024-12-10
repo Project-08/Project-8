@@ -1,11 +1,7 @@
 from project8.neural_network import utils
-from project8.neural_network import modules
 from project8.neural_network import models
 from project8.neural_network import trainer
-import torch
-import matplotlib.pyplot as plt
 from project8.neural_network.implementations import param_dicts
-
 
 
 def main() -> None:

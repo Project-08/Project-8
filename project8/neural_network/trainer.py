@@ -1,8 +1,6 @@
 from project8.neural_network import utils
 from project8.neural_network.models import NN
 import torch
-import logging
-from typing import Any, Callable, TypedDict, Optional
 
 
 class trainer:

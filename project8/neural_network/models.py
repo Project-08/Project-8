@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from project8.neural_network import modules as mod
 from project8.neural_network.utils import Params
-from typing import Callable, Dict, Any, Optional, Self, TypedDict
+from typing import Callable, Dict, Any, Optional, Self
 
 
 class NN(nn.Module):

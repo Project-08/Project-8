@@ -1,5 +1,5 @@
 from project8.neural_network import models
-from project8.neural_network.differential_operators import *
+from project8.neural_network import differential_operators as diffop
 import torch
 from typing import Callable
 
@@ -41,37 +41,45 @@ def nmfde_a4_wave(input: torch.Tensor) -> torch.Tensor:
 def zero_source(input: torch.Tensor) -> torch.Tensor:
     return torch.zeros_like(input[:, 0]).unsqueeze(1)
 
+
 class PINN:
     class nd_laplacian:
-        def __init__(self, source: Callable[[torch.Tensor], torch.Tensor]) -> None:
+        def __init__(self,
+                     source: Callable[[torch.Tensor], torch.Tensor]) -> None:
             self.source = source
 
         def __call__(self, model: models.NN) -> torch.Tensor:
             f = self.source(model.input)
-            laplace = laplacian(model)
+            laplace = diffop.laplacian(model)
             return (laplace + f).pow(2).mean()
 
     class nd_wave:
-        def __init__(self, source: Callable[[torch.Tensor], torch.Tensor]) -> None:
+        def __init__(self,
+                     source: Callable[[torch.Tensor], torch.Tensor]) -> None:
             self.source = source
 
         def __call__(self, model: models.NN) -> torch.Tensor:
             t_dim_id = model.input.shape[1] - 1
             f = self.source(model.input)
-            residual = pd(model, t_dim_id, t_dim_id) - laplacian(model, time_dependent=True) - f
+            residual = diffop.partial_derivative(model, t_dim_id,
+                                                 t_dim_id) - diffop.laplacian(
+                model,
+                time_dependent=True) - f
             return residual.pow(2).mean()
 
 
 class DRM:
     class nd_laplacian:
-        def __init__(self, source: Callable[[torch.Tensor], torch.Tensor]) -> None:
+        def __init__(self,
+                     source: Callable[[torch.Tensor], torch.Tensor]) -> None:
             self.source = source
 
         def __call__(self, model: models.NN) -> torch.Tensor:
-            grad = gradient(model)
+            grad = diffop.gradient(model)
             f = self.source(model.input)
             return torch.mean(
-                0.5 * torch.sum(grad.pow(2), 1).unsqueeze(1) - f * model.output)
+                0.5 * torch.sum(grad.pow(2), 1).unsqueeze(
+                    1) - f * model.output)
 
 
 class General:

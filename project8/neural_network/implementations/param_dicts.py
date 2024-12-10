@@ -91,7 +91,6 @@ def nmfde_a3() -> utils.Params:
     return hyperparams
 
 
-
 def drm_2d_laplacian() -> utils.Params:
     device = utils.get_device()
     coord_space = utils.ParameterSpace([[-1, 2], [-1, 1]], device)

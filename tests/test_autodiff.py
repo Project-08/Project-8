@@ -109,5 +109,3 @@ def test_grad_div() -> None:
     div = diffop.divergence(io, grad)
     div_true = d2fdxx(x, y) + d2fdyy(x, y)
     assert torch.allclose(div, div_true, atol=1e-5)
-
-
