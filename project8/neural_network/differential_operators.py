@@ -3,13 +3,25 @@ from torch.autograd import grad
 from project8.neural_network.models import NN
 from typing import Dict, Callable
 
+class AbstractIO:
+    """
+    Only used for tests.
+    """
+    input: torch.Tensor
+    output: torch.Tensor
+    cache: Dict[str, torch.Tensor]
+    def __init__(self) -> None:
+        self.cache = {}
+        self.input = torch.Tensor()
+        self.output = torch.Tensor()
+
 """
 set type hint of 'io' for all functions
 should be object with input and output attributes that are Tensors
 and a cache attribute that is a dictionary
 this object represents a trial solution
 """
-arg_type = NN
+arg_type = NN | AbstractIO
 
 
 def gradient(
