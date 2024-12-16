@@ -9,18 +9,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/project-08/project-8/project8:latest
+      credentials:
+        username: ${{ secrets.ghcr_user }}
+        password: ${{ secrets.ghcr_token }}
+    env:
+      NOGPU: 1
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
+    - name: Install dependencies
+      run: python -m pip install -e '.[dev]'
     - name: Install
-      run: python -m pip install '.[dev]'
+      run: python -m pip install .
     - name: Lint
       run: flake8
     - name: Mypy
-      run: mypy project8
+      run: |
+        mypy project8
+        mypy tests
     - name: Test
       run: pytest
     - name: Install build
