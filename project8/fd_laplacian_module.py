@@ -5,6 +5,7 @@ import scipy.sparse.linalg as la
 from multiprocessing import Pool
 from typing import List
 from typing import Any
+from typing import Callable
 
 
 def FDLaplacian_9_point_ND(steps: int,
@@ -46,15 +47,19 @@ def FDLaplacian_13_point_ND(steps: int, stepsize: float) -> Any:
     return np.sum(sub_matrices)
 
 
-def func(x: int, y: int, z: int) -> np.float64:
-    return -np.pi*np.pi*x*y*np.sin(np.pi*z)
+def func(x: float, y: float, z: float) -> np.float64:
+    return np.float64(-np.pi*np.pi*x*y*np.sin(np.pi*z))
 
 
 def Get_index(x: int, y: int, z: int, steps: int) -> int:
     return (x-1)+(steps-1)*(y-1)+(steps-1)*(steps-1)*(z-1)
 
 
-def Get_9_point_source_func(func, steps: int, stepsize: float) -> np.ndarray:
+def Get_9_point_source_func(
+        func: Callable[[float, float, float], np.float64],
+        steps: int,
+        stepsize: float
+        ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     result = np.zeros((steps-1)**3)
     for z in range(1, steps):
         for y in range(1, steps):
@@ -71,7 +76,11 @@ def Get_9_point_source_func(func, steps: int, stepsize: float) -> np.ndarray:
     return result
 
 
-def Get_13_point_source_func(func, steps: int, stepsize: float) -> np.ndarray:
+def Get_13_point_source_func(
+        func: Callable[[float, float, float], np.float64],
+        steps: int,
+        stepsize: float
+        ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     result = np.zeros((steps-1)**3)
     for z in range(1, steps):
         for y in range(1, steps):
@@ -130,7 +139,10 @@ def Get_13_point_source_func(func, steps: int, stepsize: float) -> np.ndarray:
     return result
 
 
-def Get_3D_analytical(steps: int, stepsize: float) -> np.ndarray:
+def Get_3D_analytical(
+        steps: int,
+        stepsize: float
+        ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     result = np.zeros((steps-1)**3)
     for z in range(1, steps):
         for y in range(1, steps):
@@ -150,7 +162,7 @@ def Get_error_9(size: int) -> np.float64:
     squares = (u_num-u_exact)**2
     mean = np.mean(squares)
     root = np.sqrt(mean)
-    return root
+    return np.float64(root)
 
 
 def Get_error_13(size: int) -> np.float64:
@@ -163,7 +175,7 @@ def Get_error_13(size: int) -> np.float64:
     squares = (u_num-u_exact)**2
     mean = np.mean(squares)
     root = np.sqrt(mean)
-    return root
+    return np.float64(root)
 
 
 def Generate_plot() -> None:
