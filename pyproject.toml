@@ -8,7 +8,7 @@ version = "0.0.1"
 requires-python = ">=3.11"
 dependencies = [
     "scipy==1.13",
-    "scipy-stubs==1.14",
+    "scipy-stubs>=1.14",
     "cupy-cuda12x[all]>=13.3",
     "matplotlib>=3.9",
     "numpy>=2.0",
@@ -37,6 +37,8 @@ exclude = ["old"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+[tool.mypy]
+strict = true
 
 [tool.pydocstyle]
 # Ignore various documentation-related warnings (for now)
