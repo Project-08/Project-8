@@ -4,11 +4,12 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as la
 from multiprocessing import Pool
 from typing import List
+from typing import Any
 
 
 def FDLaplacian_9_point_ND(steps: int,
                            stepsize: float,
-                           dimensions: int) -> sp._csr.csr_matrix:
+                           dimensions: int) -> Any:
     diagonal = np.ones(steps)/stepsize
     offsets: List[int] = [0, -1]
     D = sp.diags([diagonal, -diagonal],
@@ -24,7 +25,7 @@ def FDLaplacian_9_point_ND(steps: int,
     return np.sum(sub_matrices)
 
 
-def FDLaplacian_13_point_ND(steps: int, stepsize: float) -> sp._csr.csr_matrix:
+def FDLaplacian_13_point_ND(steps: int, stepsize: float) -> Any:
     diagonal1 = np.ones(steps-1)/(stepsize**2)*2.5
     diagonal2 = np.ones(steps-2)/(stepsize**2)*-(4/3)
     diagonal3 = np.ones(steps-3)/(stepsize**2)*(1/12)
