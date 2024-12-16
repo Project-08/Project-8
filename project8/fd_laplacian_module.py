@@ -178,7 +178,7 @@ def Generate_plot() -> None:
     plt.savefig("3D Error until N=50")
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # Generate_plot()
-    Get_error_9(4)
-    Get_error_13(4)
+    # Get_error_9(4)
+    # Get_error_13(4)
