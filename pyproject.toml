@@ -35,8 +35,8 @@ py-modules = ["project8"]
 [tool.flake8]
 exclude = ["old"]
 
-[tool.pytest.ini_options]
-pythonpath = ["."]
+[tool.mypy]
+strict = true
 
 [tool.pydocstyle]
 # Ignore various documentation-related warnings (for now)
@@ -46,9 +46,7 @@ ignore = [
     "D102",
     "D103",
     "D104",
-    "D105",
     "D107",
-    "D203",
     "D205",
     "D208",
     "D212",
