@@ -7,8 +7,8 @@ name = "project8"
 version = "0.0.1"
 requires-python = ">=3.11"
 dependencies = [
-    "scipy==1.13",
-    "scipy-stubs==1.14",
+    "scipy>=1.12",
+    "scipy-stubs>=1.12",
     "cupy-cuda12x[all]>=13.3",
     "matplotlib>=3.9",
     "numpy>=2.0",
