@@ -35,8 +35,13 @@ py-modules = ["project8"]
 [tool.flake8]
 exclude = ["old"]
 
+<<<<<<< HEAD
 [tool.mypy]
 strict = true
+=======
+[tool.pytest.ini_options]
+pythonpath = ["."]
+>>>>>>> parent of 732227a (Update pyproject.toml)
 
 [tool.pydocstyle]
 # Ignore various documentation-related warnings (for now)
