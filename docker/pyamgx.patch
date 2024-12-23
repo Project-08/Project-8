@@ -1,0 +1,13 @@
+diff --git a/setup.py b/setup.py
+index cc44e17..13d2004 100644
+--- a/setup.py
++++ b/setup.py
+@@ -17,7 +17,7 @@ else:
+ 
+ if not AMGX_DIR:
+     # look in PREFIX:
+-    PREFIX = sys.prefix
++    PREFIX = "/usr/local"
+     if os.path.isfile(os.path.join(PREFIX, f'lib/{lib_name}')):
+         lib_path = os.path.join(PREFIX, 'lib')
+         AMGX_lib_dirs = [lib_path]
