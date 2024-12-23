@@ -12,7 +12,7 @@ def FDLaplacian_9_point_ND(steps: int,
     diagonal = np.ones(steps)/stepsize
     offsets: List[int] = [0, -1]
     D = sp.diags([diagonal, -diagonal],
-                 offsets=offsets,  # type: ignore[arg-type]
+                 offsets=offsets,
                  shape=(steps, steps-1))
     L = D.T@D
 
@@ -33,7 +33,7 @@ def FDLaplacian_13_point_ND(steps: int, stepsize: float) -> Any:
     offsets: List[int] = [-2, -1, 0, 1, 2]
     L = sp.diags(
                  [diagonal3, diagonal2, diagonal1, diagonal2, diagonal3],
-                 offsets=offsets,  # type: ignore[arg-type]
+                 offsets=offsets,
                  shape=(steps-1, steps-1)
                  )
     dimensions = 3
