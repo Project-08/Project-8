@@ -15,15 +15,18 @@ python -m project8
 ```
 
 ## DelftBlue
-Add the following line to `~/.bashrc`
+Add the following lines to `~/.bashrc`, and reopen your ssh session
 ```sh
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
+NVARCH=`uname -s`_`uname -m`; export NVARCH
+NVCOMPILERS=$HOME/.local/nvidia/hpc_sdk; export NVCOMPILERS
+MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.7/compilers/man; export MANPATH
+PATH=$NVCOMPILERS/$NVARCH/24.7/compilers/bin:$PATH; export PATH
 ```
 
-Then, run the following commands to install the dependencies. This should take around 10 minutes.
+Then, run the following commands to install the dependencies. This should take around 22 minutes.
 ```sh
 cd delftblue
-./load.sh
 sbatch run_install.sh
 ```
 

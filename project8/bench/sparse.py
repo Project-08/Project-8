@@ -100,4 +100,4 @@ def bench_solve_tri(sizes: Sequence[int],
             plt.legend(fontsize="xx-small")
             plt.grid(True)
 
-        plt.show()
+        plt.savefig("figure.svg")
