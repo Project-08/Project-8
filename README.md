@@ -30,9 +30,10 @@ cd delftblue
 sbatch run_install.sh
 ```
 
-To run the project as an executable, activate the venv if it has not yet been activated
+To run the project as an executable, place the program's command-line arguments in `delftblue/args.txt` and edit the values in `delftblue/run_project8.sh`, then run
 ```sh
-. $HOME/venv/bin/activate
+cd delftblue
+sbatch run_project8.sh
 ```
 
 ## Using Docker

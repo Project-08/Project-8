@@ -3,8 +3,6 @@
 set -euo pipefail
 
 DIR=$(pwd)
-
-# General setup
 mkdir -p $HOME/.local/nvidia/hpc_sdk
 
 echo "Configuring python"
