@@ -14,6 +14,24 @@ To run the project as an executable, run
 python -m project8
 ```
 
+## DelftBlue
+Add the following line to `~/.bashrc`
+```sh
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
+```
+
+Then, run the following commands to install the dependencies. This should take around 10 minutes.
+```sh
+cd delftblue
+./load.sh
+sbatch run_install.sh
+```
+
+To run the project as an executable, activate the venv if it has not yet been activated
+```sh
+. $HOME/venv/bin/activate
+```
+
 ## Using Docker
 On Windows and MacOS, it's likely best to do everything in the docker container. Either download the docker image from the github repository's container repository, and tag it as `project8`
 ```sh
