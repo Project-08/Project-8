@@ -3,3 +3,5 @@
 .ropeproject/
 __pycache__/
 dist/
+slurm-*.out
+args.txt

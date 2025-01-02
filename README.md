@@ -14,6 +14,28 @@ To run the project as an executable, run
 python -m project8
 ```
 
+## DelftBlue
+Add the following lines to `~/.bashrc`, and reopen your ssh session
+```sh
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
+NVARCH=`uname -s`_`uname -m`; export NVARCH
+NVCOMPILERS=$HOME/.local/nvidia/hpc_sdk; export NVCOMPILERS
+MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.7/compilers/man; export MANPATH
+PATH=$NVCOMPILERS/$NVARCH/24.7/compilers/bin:$PATH; export PATH
+```
+
+Then, run the following commands to install the dependencies. This should take around 22 minutes.
+```sh
+cd delftblue
+sbatch run_install.sh
+```
+
+To run the project as an executable, place the program's command-line arguments in `delftblue/args.txt` and edit the values in `delftblue/run_project8.sh`, then run
+```sh
+cd delftblue
+sbatch run_project8.sh
+```
+
 ## Using Docker
 On Windows and MacOS, it's likely best to do everything in the docker container. Either download the docker image from the github repository's container repository, and tag it as `project8`
 ```sh
