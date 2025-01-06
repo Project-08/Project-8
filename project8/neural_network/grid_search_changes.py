@@ -16,13 +16,14 @@ class GridSearch:
         return model, trnr.best_loss
 
     @staticmethod
-    def grid_search(hyperparams):
+    def grid_search(hyperparams, top_k=5, write_results=True):
         varying_hps = [key for key in hyperparams if len(hyperparams[key]) > 1]
         best_model_state = None
         best_loss = float('inf')
         best_params = None
         keys, values = zip(*hyperparams.items())
         combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
+        results = []
         for params in combinations:
             print(
                 f"Testing hyperparameters:")  # Progress feedback
@@ -33,19 +34,38 @@ class GridSearch:
             except Exception as e:
                 print(f"Error with params {params}: {e}")
                 continue
+            results.append((params, loss, deepcopy(model.state_dict())))
+        if not results:
+            print("No valid results found.")
+            return None, None, None
+        results.sort(key=lambda x: x[1])
+        # Print top_k results
+        print(f"\nTop {top_k} results (sorted by loss):")
+        for i, (params, loss, _) in enumerate(results[:top_k]):
+            print(f"Rank {i+1}, loss = {loss}")
+            for key in varying_hps:
+                print(f"    {key}: {params[key]}")
 
-            if loss < best_loss:
-                best_loss = loss
-                best_model_state = deepcopy(model.state_dict())
-                best_params = params
-
-        print(f"best loss: {best_loss}, with params:")
-        for key in varying_hps:
-            print(f"{key}: {best_params[key]}")
+        # write the results to a file, if it doesnt exist, create it
+        if write_results:
+            GridSearch.write_search_results(top_k, varying_hps, results, "grid_search_results.txt")
+        best_params, best_loss, best_model_state = results[0]
         return best_params, best_loss, best_model_state
 
     @staticmethod
-    def random_search(hyperparams, n_points=10, top_k=5):
+    def write_search_results(top_k, varying_hps, results, file_name, overwrite=False):
+        mode = "w" if overwrite else "a"
+        with open(file_name, mode) as f: # if we want to overwrite, change to "w"
+            f.write(f"\nTop {top_k} results (sorted by loss):\n")
+            for i, (params, loss, _) in enumerate(results[:top_k]):
+                f.write(f"Rank {i+1}, loss = {loss}\n")
+                for key in varying_hps:
+                    f.write(f"    {key}: {params[key]}\n")
+            # a line to separate different searches
+            f.write("\n" + "-"*50 + "\n")
+
+    @staticmethod
+    def random_search(hyperparams, n_points=10, top_k=5, write_results=True):
         n_combs = GridSearch.n_combinations(hyperparams)
         if n_points > n_combs:
             warn(
@@ -84,16 +104,9 @@ class GridSearch:
             for key in varying_hps:
                 print(f"    {key}: {params[key]}")
 
-        
-            # if loss < best_loss:
-            #     best_loss = loss
-            #     best_model_state = deepcopy(model.state_dict())
-            #     best_params = params
-            
+        if write_results:
+            GridSearch.write_search_results(top_k, varying_hps, results, "random_search_results.txt")
         best_params, best_loss, best_model_state = results[0]
-        # print(f"best loss: {best_loss}, with params:")
-        # for key in varying_hps:
-        #     print(f"{key}: {best_params[key]}")
         return best_params, best_loss, best_model_state
 
     @staticmethod
@@ -159,12 +172,11 @@ def main():
     ]
     hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
 
-
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
     best_params, best_loss, best_state = GridSearch.random_search(
-        hyperparameters,top_k=10)
+        hyperparameters)
 
 
 # results of current settings
