@@ -41,6 +41,9 @@ def nmfde_a4_wave(input: torch.Tensor) -> torch.Tensor:
 def zero_source(input: torch.Tensor) -> torch.Tensor:
     return torch.zeros_like(input[:, 0]).unsqueeze(1)
 
+def final_source_1(input: torch.Tensor) -> torch.Tensor:
+    return -torch.pi ** 2 * input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])
+
 
 class PINN:
     class nd_laplacian:
