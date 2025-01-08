@@ -1,3 +1,9 @@
+Notes:
+lower batch size is best predictor for low loss,
+which maybe means that these low losses are achieved by lucky draw of data,
+so we might need a validation set to confirm the results
+
+
 
 Top 100 results (sorted by loss):
 Rank 1, loss = 1.381273627281189
