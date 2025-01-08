@@ -1,0 +1,54 @@
+
+Top 15 results (sorted by loss):
+Rank 1, loss = -0.004499286413192749
+    act_fn: ReLU()
+    width: 128
+    n_blocks: 5
+    lr: 0.0001
+Rank 2, loss = -0.002987113781273365
+    act_fn: PolyReLU(n=3)
+    width: 32
+    n_blocks: 8
+    lr: 0.001
+Rank 3, loss = -0.002283100737258792
+    act_fn: PolyReLU(n=4)
+    width: 16
+    n_blocks: 5
+    lr: 0.001
+Rank 4, loss = -0.0014870931627228856
+    act_fn: Tanh()
+    width: 16
+    n_blocks: 8
+    lr: 0.001
+Rank 5, loss = -0.000928067194763571
+    act_fn: Tanh()
+    width: 32
+    n_blocks: 10
+    lr: 1e-05
+Rank 6, loss = -0.0005298347678035498
+    act_fn: SiLU()
+    width: 128
+    n_blocks: 10
+    lr: 0.001
+Rank 7, loss = -0.0005052319611422718
+    act_fn: SiLU()
+    width: 32
+    n_blocks: 8
+    lr: 0.0001
+Rank 8, loss = 0.005973909515887499
+    act_fn: PolyReLU(n=3)
+    width: 128
+    n_blocks: 5
+    lr: 1e-05
+Rank 9, loss = 0.008921892382204533
+    act_fn: PolyReLU(n=3)
+    width: 128
+    n_blocks: 8
+    lr: 1e-05
+Rank 10, loss = 0.1388203352689743
+    act_fn: PolyReLU(n=4)
+    width: 32
+    n_blocks: 3
+    lr: 1e-05
+
+--------------------------------------------------

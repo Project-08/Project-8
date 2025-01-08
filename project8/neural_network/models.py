@@ -124,27 +124,27 @@ class NN(nn.Module):
         return cls(layers, device)
 
     @classmethod
-    def from_param_dict(cls, params: Params) -> Self:
-        match params['model_constructor']:
-            case 'empty':
-                return cls.empty(
-                    params['device']
-                )
-            case 'rectangular_fnn':
-                model = cls.rectangular_fnn(
-                    params['n_in'], params['n_out'],
-                    params['width'], params['depth'],
-                    params['act_fn'], params['device']
-                )
-            case 'drm':
-                model = cls.drm(
-                    params['n_in'], params['n_out'],
-                    params['width'], params['n_blocks'],
-                    params['act_fn'], params['n_linear_drm'],
-                    params['device']
-                )
-            case _:
-                raise ValueError('Invalid model_constructor_name')
+    def from_param_dict(cls, params: Params) -> "NN":
+        if params['model_constructor'] == 'empty':
+            return cls.empty(
+                params['device']
+            )
+        elif params['model_constructor'] == 'rectangular_fnn':
+            model = cls.rectangular_fnn(
+                params['n_in'], params['n_out'],
+                params['width'], params['depth'],
+                params['act_fn'], params['device']
+            )
+        elif params['model_constructor'] == 'drm':
+            model = cls.drm(
+                params['n_in'], params['n_out'],
+                params['width'], params['n_blocks'],
+                params['act_fn'], params['n_linear_drm'],
+                params['device']
+            )
+        else:
+            raise ValueError('Invalid model_constructor_name')
+
         if 'weight_init_fn' in params and 'bias_init_fn' in params:
             model.initialize_weights(
                 params['weight_init_fn'],
