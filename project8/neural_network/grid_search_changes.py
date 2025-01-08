@@ -175,8 +175,8 @@ def main():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    best_params, best_loss, best_state = GridSearch.random_search(
-        hyperparameters)
+    best_params, best_loss, best_state = GridSearch.grid_search(
+        hyperparameters,top_k=100)
 
 
 # results of current settings
