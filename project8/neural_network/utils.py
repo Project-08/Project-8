@@ -4,11 +4,13 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
+import matplotlib.animation as animation
 from warnings import warn
 import time
 import os
 import logging
-from typing import Optional, List, Iterable, Any, Union
+from typing import Optional, List, Iterable, Any, Union, TypedDict, Callable, \
+    Dict
 
 plot_folder = os.path.join(
     os.path.dirname(
@@ -83,9 +85,66 @@ def plot_plane(x: Union[torch.Tensor, np.ndarray[Any, Any]],
     plt.savefig(plot_folder + '/' + filename)
 
 
+def anim_2d(x: Union[torch.Tensor, np.ndarray[Any, Any]],
+            y: Union[torch.Tensor, np.ndarray[Any, Any]],
+            t: Union[torch.Tensor, np.ndarray[Any, Any]],
+            f: Union[torch.Tensor, np.ndarray[Any, Any]], title: str,
+            fig_id: int = 0,
+            filename: str = '') -> None:
+    x, y, t, f = if_tensors_to_numpy(x, y, t, f)
+    if filename == '':
+        filename = title + '.gif'
+    fig = plt.figure(fig_id)
+    domain = (x.min(), x.max(), y.min(), y.max())
+    plt.xlabel('x')
+    plt.ylabel('y')
+    tlt = plt.title(title)
+    im = plt.imshow(f[0, :, :], extent=domain, origin='lower')
+    if domain[1] - domain[0] < 1.1 * (domain[3] - domain[2]):
+        plt.colorbar(orientation='vertical')
+    else:
+        plt.colorbar(orientation='horizontal')
+    im.set_clim(-np.abs(f).max(), np.abs(f).max())
+
+    def animate(frame: int) -> Any:
+        data = f[frame, :, :]
+        current_time = t[frame, :, :].mean()
+        im.set_array(data)
+        tlt.set_text(title + f', t = {current_time:.2f}s')
+        return im,
+
+    t0 = t.min()
+    t1 = t.max()
+    interval = 1000 * (t1 - t0) / t.shape[0]
+    anim = animation.FuncAnimation(fig, animate, frames=t.shape[0],
+                                   interval=interval, blit=False)
+    writer = animation.PillowWriter(fps=15,
+                                    metadata=dict(artist='Me'),
+                                    bitrate=1800)
+    anim.save(plot_folder + '/' + filename, writer=writer)
+
+
+def scatter_3d(x: Union[torch.Tensor, np.ndarray[Any, Any]],
+               y: Union[torch.Tensor, np.ndarray[Any, Any]],
+               z: Union[torch.Tensor, np.ndarray[Any, Any]],
+               title: str, fig_id: int = 0,
+               filename: str = '') -> None:
+    x, y, z = if_tensors_to_numpy(x, y, z)
+    if filename == '':
+        filename = title + '.png'
+    fig = plt.figure(fig_id)
+    ax: Axes3D = fig.add_subplot(111, projection='3d')
+    ax.scatter(x, y, z)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    ax.set_title(title)
+    plt.savefig(plot_folder + '/' + filename)
+
+
 class ParameterSpace:
     def __init__(self, domain: Iterable[Iterable[float]],
-                 device: str = 'cpu') -> None:
+                 device: str | torch.device = 'cpu') -> None:
         self.domain = torch.tensor(domain, dtype=torch.float64, device=device)
         self.device = device
         self.center = (self.domain[:, 1] + self.domain[:, 0]) / 2
@@ -93,6 +152,12 @@ class ParameterSpace:
         self.length = self.domain[:, 1] - self.domain[:, 0]
         self.uniform_bnrdy_prob = 1 - self.length / self.length.sum()
         self.size = self.domain.shape[0]
+
+    @staticmethod
+    def from_rand_data(data: torch.Tensor) -> 'ParameterSpace':
+        domain = torch.stack([data.min(0).values, data.max(0).values]).T
+        device = data.device
+        return ParameterSpace(domain, device)
 
     def rand(self, n: int) -> torch.Tensor:
         rand = torch.rand(n, self.domain.shape[0], device=self.device) * 2 - 1
@@ -178,14 +243,23 @@ class ParameterSpace:
 
 
 class DataLoader:
+    """
+    DataLoader for training neural networks.
+    Device defaults to device of data
+    """
+
     def __init__(self, all_data: torch.Tensor, batch_size: int,
-                 device: str = 'cpu',
                  output_requires_grad: bool = False,
-                 shuffle: bool = True) -> None:
-        self.all_data = all_data.to(device)
+                 shuffle: bool = True,
+                 device: Optional[str | torch.device] = None) -> None:
+        if device is not None:
+            self.all_data = all_data.to(device)
+            self.device = device
+        else:
+            self.all_data = all_data
+            self.device = str(self.all_data.device)
         self.n = all_data.shape[0]
         self.batch_size = batch_size
-        self.device = device
         self.output_requires_grad = output_requires_grad
         self.do_shuffle = shuffle
         if self.do_shuffle:
@@ -200,7 +274,7 @@ class DataLoader:
         if self.i == self.n_batches:
             self.i = 0
             if self.do_shuffle:
-                self.all_data = self.all_data[torch.randperm(self.n)]
+                self.__shuffle()
         data = self.all_data[
                self.i * self.batch_size:(self.i + 1) * self.batch_size]
         self.i += 1
@@ -225,12 +299,14 @@ class Timer:
         self.running = False
         self.t_elapsed += self.t_end - self.t_start
 
-    def read(self) -> None:
+    def elapsed(self) -> float:
         if self.running:
-            out = self.t_elapsed + (time.time() - self.t_start)
+            return self.t_elapsed + (time.time() - self.t_start)
         else:
-            out = self.t_elapsed
-        print(f'Time elapsed: {format_time(out)}')
+            return self.t_elapsed
+
+    def read(self) -> None:
+        print(f'Time elapsed: {format_time(self.elapsed())}')
 
     def rr(self) -> None:
         # read reset
@@ -257,3 +333,43 @@ def format_time(t: float) -> str:
         return f'{t / 60:.2f} min'
     else:
         return f'{t / 3600:.2f} h'
+
+
+class Params(TypedDict, total=False):
+    """
+    Parameters fully defining a problem, model and training setup.
+    To improve functionality and take different hyperparameters,
+    change or create new model and trainer class.
+    """
+    device: torch.device | str
+    # training params
+    n_epochs: int
+    optimizer: Any  # torch.optim.Optimizer. typing doesnt like optim.
+    lr: float
+    loss_fns: list[Callable[[Any], torch.Tensor]]
+    loss_weights: list[float]
+    loss_fn_data: list[torch.Tensor]
+    loss_fn_batch_sizes: list[int]
+    # model params
+    model_constructor: str
+    weight_init_fn: Callable[
+                        [torch.Tensor, Any], torch.Tensor
+                    ] | Callable[
+                        [torch.Tensor], torch.Tensor
+                    ]
+    bias_init_fn: Callable[
+                      [torch.Tensor, Any], torch.Tensor
+                  ] | Callable[
+                      [torch.Tensor], torch.Tensor
+                  ]
+    weight_init_kwargs: Optional[Dict[str, Any]]
+    bias_init_kwargs: Optional[Dict[str, Any]]
+    # rectangular_fnn
+    n_in: int
+    n_out: int
+    width: int
+    depth: int
+    act_fn: torch.nn.Module
+    # drm
+    n_blocks: int
+    n_linear_drm: int

@@ -1,10 +1,7 @@
 import numpy as np 
 import math, torch, generateData, time
-import torch.nn.functional as F
-from torch.optim.lr_scheduler import MultiStepLR, StepLR
+from torch.optim.lr_scheduler import StepLR
 import torch.nn as nn
-import matplotlib.pyplot as plt
-import sys, os
 import writeSolution
 
 # Network structure
@@ -33,7 +30,7 @@ def preTrain(model,device,params,preOptimizer,preScheduler,fun):
 
     for step in range(params["preStep"]):
         # The volume integral
-        data = torch.from_numpy(generateData.sampleFromDisk(params["radius"],params["bodyBatch"])).float().to(device)
+        data = torch.from_numpy(generateData.sampleFromDisk(params["radius"], params["bodyBatch"])).float().to(device)
 
         output = model(data)
 
@@ -60,9 +57,9 @@ def preTrain(model,device,params,preOptimizer,preScheduler,fun):
 def train(model,device,params,optimizer,scheduler):
     model.train()
 
-    data1 = torch.from_numpy(generateData.sampleFromDisk(params["radius"],params["bodyBatch"])).float().to(device)
+    data1 = torch.from_numpy(generateData.sampleFromDisk(params["radius"], params["bodyBatch"])).float().to(device)
     data1.requires_grad = True
-    data2 = torch.from_numpy(generateData.sampleFromSurface(params["radius"],params["bdryBatch"])).float().to(device)
+    data2 = torch.from_numpy(generateData.sampleFromSurface(params["radius"], params["bdryBatch"])).float().to(device)
 
     for step in range(params["trainStep"]-params["preStep"]):
         output1 = model(data1)
@@ -90,9 +87,11 @@ def train(model,device,params,optimizer,scheduler):
             file.write(str(step+params["preStep"]+1)+" "+str(error)+"\n")
 
         if step%params["sampleStep"] == params["sampleStep"]-1:
-            data1 = torch.from_numpy(generateData.sampleFromDisk(params["radius"],params["bodyBatch"])).float().to(device)
+            data1 = torch.from_numpy(
+                generateData.sampleFromDisk(params["radius"], params["bodyBatch"])).float().to(device)
             data1.requires_grad = True
-            data2 = torch.from_numpy(generateData.sampleFromSurface(params["radius"],params["bdryBatch"])).float().to(device)
+            data2 = torch.from_numpy(
+                generateData.sampleFromSurface(params["radius"], params["bdryBatch"])).float().to(device)
 
         if 10*(step+1)%params["trainStep"] == 0:
             print("%s%% finished..."%(100*(step+1)//params["trainStep"]))
@@ -112,7 +111,8 @@ def errorFun(output,target,params):
 def test(model,device,params):
     numQuad = params["numQuad"]
 
-    data = torch.from_numpy(generateData.sampleFromDisk(1,numQuad)).float().to(device)
+    data = torch.from_numpy(
+        generateData.sampleFromDisk(1, numQuad)).float().to(device)
     output = model(data)
     target = exact(params["radius"],data).to(device)
 
