@@ -41,8 +41,13 @@ def nmfde_a4_wave(input: torch.Tensor) -> torch.Tensor:
 def zero_source(input: torch.Tensor) -> torch.Tensor:
     return torch.zeros_like(input[:, 0]).unsqueeze(1)
 
-def final_source_1(input: torch.Tensor) -> torch.Tensor:
-    return -torch.pi ** 2 * input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])
+def problem1_source(input: torch.Tensor) -> torch.Tensor:
+    # not negative as in the paper because the loss fn is for -laplacian(u) = f
+    return (torch.pi ** 2) * input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])
+
+
+def problem_1_exact(input: torch.Tensor) -> torch.Tensor:
+    return input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])
 
 
 class PINN:
@@ -53,7 +58,7 @@ class PINN:
 
         def __call__(self, model: models.NN) -> torch.Tensor:
             f = self.source(model.input)
-            laplace = diffop.laplacian(model)
+            laplace = diffop.laplacian(model, time_dependent=False)
             return (laplace + f).pow(2).mean()
 
     class nd_wave:
@@ -103,3 +108,13 @@ class General:
 
         def __call__(self, model: models.NN) -> torch.Tensor:
             return (model.output - self.fn(model.input)).pow(2).mean()
+
+    class problem1_bc_x:
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            residual = model.output - model.input[:, 1] * torch.sin(torch.pi * model.input[:, 2])
+            return residual.pow(2).mean()
+
+    class problem1_bc_y:
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            residual = model.output - model.input[:, 0] * torch.sin(torch.pi * model.input[:, 2])
+            return residual.pow(2).mean()

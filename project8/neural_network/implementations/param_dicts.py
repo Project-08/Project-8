@@ -160,3 +160,86 @@ def pinn_2d_wave() -> utils.Params:
         ],
     }
     return hyperparams
+
+def pinn_problem1() -> utils.Params:
+    device = utils.get_device()
+    coord_space = utils.ParameterSpace([[0, 1], [0, 1], [0, 1]], device)
+    bc_select_1 = torch.tensor([[1, 0], [1, 0], [1, 1]], device=device)
+    bc_select_2 = torch.tensor([[0, 1], [0, 0], [0, 0]], device=device)
+    bc_select_3 = torch.tensor([[0, 0], [0, 1], [0, 0]], device=device)
+    hyperparams: utils.Params = {
+        'device': device,
+        # model params
+        'model_constructor': 'rectangular_fnn',
+        'act_fn': torch.nn.Tanh(),
+        'n_in': 3,
+        'n_out': 1,
+        'width': 256,
+        'depth': 8,
+        'weight_init_fn': torch.nn.init.xavier_uniform_,
+        'bias_init_fn': torch.nn.init.zeros_,
+        'weight_init_kwargs': {'gain': 0.5},
+        'bias_init_kwargs': {},
+        # training params
+        'optimizer': torch.optim.Adam,
+        'lr': 1e-3,
+        'n_epochs': 5000,
+        'loss_fn_batch_sizes': [100, 50, 20, 20],
+        # problem definition
+        'loss_fns': [
+            lf.PINN.nd_laplacian(lf.problem1_source),
+            lf.General.dirichlet_bc_penalty(),
+            lf.General.problem1_bc_x(),
+            lf.General.problem1_bc_y()
+        ],
+        'loss_weights': [1, 1, 1, 1],
+        'loss_fn_data': [
+            coord_space.rand(1_000_000),
+            coord_space.select_bndry_rand(400_000, bc_select_1),
+            coord_space.select_bndry_rand(100_000, bc_select_2),
+            coord_space.select_bndry_rand(100_000, bc_select_3)
+        ],
+    }
+    return hyperparams
+
+def drm_problem1() -> utils.Params:
+    device = utils.get_device()
+    coord_space = utils.ParameterSpace([[0, 1], [0, 1], [0, 1]], device)
+    bc_select_1 = torch.tensor([[1, 0], [1, 0], [1, 1]], device=device)
+    bc_select_2 = torch.tensor([[0, 1], [0, 0], [0, 0]], device=device)
+    bc_select_3 = torch.tensor([[0, 0], [0, 1], [0, 0]], device=device)
+    hyperparams: utils.Params = {
+        'device': device,
+        # model params
+        'model_constructor': 'drm',
+        'act_fn': modules.PolyReLU(3),
+        'n_in': 2,
+        'n_out': 1,
+        'width': 20,
+        'n_blocks': 4,
+        'n_linear_drm': 2,
+        'weight_init_fn': torch.nn.init.xavier_uniform_,
+        'bias_init_fn': torch.nn.init.zeros_,
+        'weight_init_kwargs': {'gain': 0.5},
+        'bias_init_kwargs': {},
+        # training params
+        'optimizer': torch.optim.Adam,
+        'lr': 1e-3,
+        'n_epochs': 5000,
+        'loss_fn_batch_sizes': [100, 100, 100, 100],
+        # problem definition
+        'loss_fns': [
+            lf.DRM.nd_laplacian(lf.problem1_source),
+            lf.General.dirichlet_bc_penalty(),
+            lf.General.problem1_bc_x(),
+            lf.General.problem1_bc_y()
+        ],
+        'loss_weights': [1, 1, 1, 1],
+        'loss_fn_data': [
+            coord_space.rand(100_000),
+            coord_space.select_bndry_rand(100_000, bc_select_1),
+            coord_space.select_bndry_rand(100_000, bc_select_2),
+            coord_space.select_bndry_rand(100_000, bc_select_3)
+        ],
+    }
+    return hyperparams

@@ -1,11 +1,10 @@
-from project8.neural_network import utils
-from project8.neural_network import models
-from project8.neural_network import trainer
-from project8.neural_network.implementations import param_dicts
+from project8.neural_network import utils, models, trainer
+from project8.neural_network.implementations import param_dicts, loss_functions
 
 
 def main() -> None:
-    hyperparams = param_dicts.drm_2d_laplacian()
+    problem = 1 # set to 0 to ignore
+    hyperparams = param_dicts.pinn_problem1()
     model = models.NN.from_param_dict(hyperparams)
     trnr = trainer.trainer(model, hyperparams, verbose=True)
     trnr.train()
@@ -18,6 +17,15 @@ def main() -> None:
         x, y = coord_space.regrid(grid)
         f = coord_space.regrid(output)[0]
         utils.plot_2d(x, y, f, title='output_param_based', fig_id=2)
+    elif problem == 1:
+        grid = coord_space.fgrid(50)
+        output = model(grid)
+        real = loss_functions.problem_1_exact(grid)
+        x, y, t = coord_space.regrid(grid)
+        u = coord_space.regrid(output)[0]
+        f = coord_space.regrid(real)[0]
+        utils.anim_2d(x, y, t, u, title='output_prediction', fig_id=2)
+        utils.anim_2d(x, y, t, f, title='output_exact', fig_id=3)
     elif hyperparams['n_in'] == 3 and hyperparams['n_out'] == 1:
         grid = coord_space.fgrid(50)
         output = model(grid)

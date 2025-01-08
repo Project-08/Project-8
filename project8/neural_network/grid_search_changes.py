@@ -178,34 +178,37 @@ def main():
     best_params, best_loss, best_state = GridSearch.grid_search(
         hyperparameters,top_k=100)
 
+def problem1():
+    hyperparameters = param_dicts.pinn_problem1()
+    hyperparameters = GridSearch.listify(hyperparameters)
+    # now all hyperparameters are lists with 1 entry,
+    # extend the ones you want to vary
+    hyperparameters['n_epochs'] = [3000]
+    # Search domains for key hyperparameters
+    hyperparameters['width'] = [64, 128, 256]  # Increasing capacity
+    hyperparameters['depth'] = [2, 4, 8]  # Experimenting with depth
+    hyperparameters['act_fn'] = [
+        modules.PolyReLU(2),
+        modules.PolyReLU(3),
+        nn.Tanh(),            # Smooth activation
+        nn.ReLU(),            # Standard activation
+        nn.SiLU()             # Swish-like activation
+    ]
+    hyperparameters['lr'] = [1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
+    hyperparameters['loss_fn_batch_sizes'] = [
+        [3000, 1000, 200, 200],
+        [1000, 300, 100, 100],
+        [800, 100, 50, 50],
+        [500, 80, 40, 40],
+        [100, 50, 20, 20],
+    ]
 
-# results of current settings
-"""Best Hyperparameters: {'device': 'cuda:0', 'model_constructor': 'drm', 
-'act_fn': ReLU(), 'n_in': 2, 'n_out': 1, 'width': 64, 'n_blocks': 5, 
-'n_linear_drm': 2, 'weight_init_fn': <function xavier_uniform_ at 
-0x7cc8723aa660>, 'bias_init_fn': <function zeros_ at 0x7cc8723aa3e0>, 
-'weight_init_kwargs': {'gain': 0.5}, 'bias_init_kwargs': {}, 'optimizer': 
-<class 'torch.optim.adam.Adam'>, 'lr': 0.0001, 'n_epochs': 1000, 
-'loss_fn_batch_sizes': [100, 50], 'loss_fns': [
-<project8.neural_network.implementations.loss_functions.DRM.nd_laplacian 
-object at 0x7cc85b187650>, 
-<project8.neural_network.implementations.loss_functions.General
-.dirichlet_bc_penalty object at 0x7cc85b187710>], 'loss_weights': [1, 10], 
-'loss_fn_data': [tensor([[-0.2189, -0.6418],
-        [-0.8135,  0.8704],
-        [ 0.4982, -0.2455],
-        ...,
-        [ 0.1399,  0.9482],
-        [ 1.0056, -0.4889],
-        [-0.9005, -0.8499]], device='cuda:0', dtype=torch.float64), tensor([
-        [-1.0000,  0.1905],
-        [ 1.1484, -1.0000],
-        [-1.0000, -0.0922],
-        ...,
-        [-1.0000, -0.7840],
-        [ 0.0703, -1.0000],
-        [ 1.6922,  1.0000]], device='cuda:0', dtype=torch.float64)]}
-Best Loss: -0.004653674550354481"""
+    print(
+        f"Number of combinations: "
+        f"{GridSearch.n_combinations(hyperparameters)}")
+    GridSearch.random_search(hyperparameters,top_k=100, n_points=100)
+
+
 
 if __name__ == "__main__":
-    main()
+    problem1()
