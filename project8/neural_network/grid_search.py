@@ -195,13 +195,6 @@ def problem1():
         nn.SiLU()             # Swish-like activation
     ]
     hyperparameters['lr'] = [1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
-    hyperparameters['loss_fn_batch_sizes'] = [
-        [3000, 1000, 200, 200],
-        [1000, 300, 100, 100],
-        [800, 100, 50, 50],
-        [500, 80, 40, 40],
-        [100, 50, 20, 20],
-    ]
 
     print(
         f"Number of combinations: "

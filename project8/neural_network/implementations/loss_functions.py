@@ -43,11 +43,11 @@ def zero_source(input: torch.Tensor) -> torch.Tensor:
 
 def problem1_source(input: torch.Tensor) -> torch.Tensor:
     # not negative as in the paper because the loss fn is for -laplacian(u) = f
-    return (torch.pi ** 2) * input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])
+    return ((torch.pi ** 2) * input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])).unsqueeze(1)
 
 
 def problem_1_exact(input: torch.Tensor) -> torch.Tensor:
-    return input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])
+    return (input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])).unsqueeze(1)
 
 
 class PINN:
@@ -109,12 +109,7 @@ class General:
         def __call__(self, model: models.NN) -> torch.Tensor:
             return (model.output - self.fn(model.input)).pow(2).mean()
 
-    class problem1_bc_x:
+    class problem1_bc_xy:
         def __call__(self, model: models.NN) -> torch.Tensor:
-            residual = model.output - model.input[:, 1] * torch.sin(torch.pi * model.input[:, 2])
-            return residual.pow(2).mean()
-
-    class problem1_bc_y:
-        def __call__(self, model: models.NN) -> torch.Tensor:
-            residual = model.output - model.input[:, 0] * torch.sin(torch.pi * model.input[:, 2])
+            residual = model.output - (model.input[:, 0] * model.input[:, 1]* torch.sin(torch.pi * model.input[:, 2])).unsqueeze(1)
             return residual.pow(2).mean()

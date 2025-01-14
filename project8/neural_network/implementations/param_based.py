@@ -19,8 +19,11 @@ def main() -> None:
         utils.plot_2d(x, y, f, title='output_param_based', fig_id=2)
     elif problem == 1:
         grid = coord_space.fgrid(50)
+        grid.requires_grad = False
         output = model(grid)
         real = loss_functions.problem_1_exact(grid)
+        err = (output - real).abs().max()
+        print(f'max error: {err}')
         x, y, t = coord_space.regrid(grid)
         u = coord_space.regrid(output)[0]
         f = coord_space.regrid(real)[0]
