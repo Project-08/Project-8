@@ -41,17 +41,13 @@ def nmfde_a4_wave(input: torch.Tensor) -> torch.Tensor:
 def zero_source(input: torch.Tensor) -> torch.Tensor:
     return torch.zeros_like(input[:, 0]).unsqueeze(1)
 
-def problem1_source(input: torch.Tensor) -> torch.Tensor:
-    # not negative as in the paper because the loss fn is for -laplacian(u) = f
-    return ((torch.pi ** 2) * input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])).unsqueeze(1)
 
-
-def problem_1_exact(input: torch.Tensor) -> torch.Tensor:
-    return (input[:, 0] * input[:, 1] * torch.sin(torch.pi * input[:, 2])).unsqueeze(1)
 
 
 class PINN:
-    class nd_laplacian:
+    class laplacian:
+        # -laplacian(u) = f
+        # residual = laplacian(u) + f
         def __init__(self,
                      source: Callable[[torch.Tensor], torch.Tensor]) -> None:
             self.source = source
@@ -61,7 +57,9 @@ class PINN:
             laplace = diffop.laplacian(model, time_dependent=False)
             return (laplace + f).pow(2).mean()
 
-    class nd_wave:
+    class wave:
+        # u_tt = laplacian(u) + f
+        # residual = u_tt - laplacian(u) - f
         def __init__(self,
                      source: Callable[[torch.Tensor], torch.Tensor]) -> None:
             self.source = source
@@ -77,7 +75,9 @@ class PINN:
 
 
 class DRM:
-    class nd_laplacian:
+    class laplacian:
+        # -laplacian(u) = f
+        # Minimize 0.5 * ||grad(u)||^2 - f * u
         def __init__(self,
                      source: Callable[[torch.Tensor], torch.Tensor]) -> None:
             self.source = source
@@ -91,16 +91,9 @@ class DRM:
 
 
 class General:
-    class constant_bc_penalty:
-        def __init__(self, constant: float = 0) -> None:
-            self.target: float = constant
-
-        def __call__(self, model: models.NN) -> torch.Tensor:
-            return (model.output - self.target).pow(2).mean()
-
-    class dirichlet_bc_penalty:
-        def __call__(self, model: models.NN) -> torch.Tensor:
-            return model.output.pow(2).mean()
+    @staticmethod
+    def dirichlet_bc(model: models.NN) -> torch.Tensor:
+        return model.output.pow(2).mean()
 
     class fit_to_fn:
         def __init__(self, fn: Callable[[torch.Tensor], torch.Tensor]) -> None:
@@ -109,7 +102,46 @@ class General:
         def __call__(self, model: models.NN) -> torch.Tensor:
             return (model.output - self.fn(model.input)).pow(2).mean()
 
-    class problem1_bc_xy:
-        def __call__(self, model: models.NN) -> torch.Tensor:
-            residual = model.output - (model.input[:, 0] * model.input[:, 1]* torch.sin(torch.pi * model.input[:, 2])).unsqueeze(1)
-            return residual.pow(2).mean()
+
+class Problem1:
+    pass
+
+class Problem2:
+    pass
+
+class Problem3:
+    pass
+
+class Problem4:
+    pass
+
+class Problem5:
+    """
+    -laplacian(u) = f
+    f(x, y, z) = pi^2 * x * y * sin(pi * z)
+    u(0, x, z) = u(x, 0, z) = u(x, y, 0) = u(x, y, 1) = 0
+    u(1, y, z) = y * sin(pi * z)
+    u(x, 1, z) = x * sin(pi * z)
+    (implemented as u(1, y, z) = u(x, 1, z) = x * y * sin(pi * z))
+
+    u(x, y, z) = x * y * sin(pi * z)
+    """
+    @staticmethod
+    def source(input: torch.Tensor) -> torch.Tensor:
+        # not negative as in the paper because the loss fn is for -laplacian(u) = f
+        return ((torch.pi ** 2) * input[:, 0] * input[:, 1] * torch.sin(
+            torch.pi * input[:, 2])).unsqueeze(1)
+
+    @staticmethod
+    def exact(input: torch.Tensor) -> torch.Tensor:
+        return (input[:, 0] * input[:, 1] * torch.sin(
+            torch.pi * input[:, 2])).unsqueeze(1)
+
+    @staticmethod
+    def bc(model: models.NN) -> torch.Tensor:
+        residual = model.output - (model.input[:, 0] * model.input[:, 1]* torch.sin(torch.pi * model.input[:, 2])).unsqueeze(1)
+        return residual.pow(2).mean()
+
+
+class Problem6:
+    pass

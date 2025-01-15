@@ -179,7 +179,7 @@ def main():
         hyperparameters,top_k=100)
 
 def problem1():
-    hyperparameters = param_dicts.pinn_problem1()
+    hyperparameters = param_dicts.pinn_problem5()
     hyperparameters = GridSearch.listify(hyperparameters)
     # now all hyperparameters are lists with 1 entry,
     # extend the ones you want to vary
