@@ -145,7 +145,11 @@ def scatter_3d(x: Union[torch.Tensor, np.ndarray[Any, Any]],
 class ParameterSpace:
     def __init__(self, domain: Iterable[Iterable[float]],
                  device: str | torch.device = 'cpu') -> None:
-        self.domain = torch.tensor(domain, dtype=torch.float64, device=device)
+        if isinstance(domain, torch.Tensor):
+            self.domain = domain
+        else:
+            self.domain = torch.tensor(domain, dtype=torch.float64,
+                                       device=device)
         self.device = device
         self.center = (self.domain[:, 1] + self.domain[:, 0]) / 2
         self.amp = (self.domain[:, 1] - self.domain[:, 0]) / 2

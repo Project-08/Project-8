@@ -35,8 +35,7 @@ class trainer:
         self.clip_grads = True
         self.clip_value = 1.0
         self.terminate_on_stagnation = True
-        self.stagnation_epochs = 1000
-
+        self.stagnation_epochs = 1500
 
     def eval_loss_fn(self, i: int) -> torch.Tensor:
         self.model(self.data_loaders[i]())
@@ -53,7 +52,8 @@ class trainer:
         loss = self.loss()
         loss.backward()  # type: ignore
         if self.clip_grads:
-            torch.nn.utils.clip_grad_value_(self.model.parameters(), self.clip_value)
+            torch.nn.utils.clip_grad_value_(self.model.parameters(),
+                                            self.clip_value)
         if loss.item() < self.best_loss:
             self.best_epoch = len(self.loss_history)
             self.best_loss = loss.item()
@@ -63,8 +63,9 @@ class trainer:
 
     def train(self) -> None:
         self.timer.start()
-        for epoch in range(1, self.params['n_epochs']+1):
-            if self.terminate_on_stagnation and (epoch - self.best_epoch) > self.stagnation_epochs:
+        for epoch in range(1, self.params['n_epochs'] + 1):
+            if self.terminate_on_stagnation and (
+                    epoch - self.best_epoch) > self.stagnation_epochs:
                 if self.verbose:
                     print(f'Terminating due to stagnation at epoch {epoch}')
                 break

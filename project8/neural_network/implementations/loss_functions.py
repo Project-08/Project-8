@@ -5,7 +5,7 @@ from typing import Callable
 
 
 def sinxy_source(input: torch.Tensor) -> torch.Tensor:
-    return torch.sin(12 * input[:, 0] * input[:, 1]).unsqueeze(1)
+    return -torch.sin(12 * input[:, 0] * input[:, 1]).unsqueeze(1)
 
 
 def nmfde_a3_source(input: torch.Tensor) -> torch.Tensor:
@@ -40,8 +40,6 @@ def nmfde_a4_wave(input: torch.Tensor) -> torch.Tensor:
 
 def zero_source(input: torch.Tensor) -> torch.Tensor:
     return torch.zeros_like(input[:, 0]).unsqueeze(1)
-
-
 
 
 class PINN:
@@ -104,31 +102,150 @@ class General:
 
 
 class Problem1:
-    pass
+    """
+    Problem 1 from https://doi.org/10.1016/j.apm.2011.11.078
+    -laplacian(u) = f
+    -f(x, y) = sin(pi*x) * sin(pi*y)
+    u(0, y) = u(1, y) = u(x, 0) = u(x, 1) = 0
+
+    u(x, y) = (-1/(2*pi^2)) * sin(pi*x) * sin(pi*y)
+    (x,y) = [0,1]x[0,1]
+    """
+
+    @staticmethod
+    def source(input: torch.Tensor) -> torch.Tensor:
+        return -(torch.sin(torch.pi * input[:, 0]) * torch.sin(
+            torch.pi * input[:, 1])).unsqueeze(1)
+
+    @staticmethod
+    def exact(input: torch.Tensor) -> torch.Tensor:
+        return ((-1 / (2 * torch.pi ** 2)) * torch.sin(
+            torch.pi * input[:, 0]) * torch.sin(
+            torch.pi * input[:, 1])).unsqueeze(1)
+
+    # dirichlet bc
+
 
 class Problem2:
-    pass
+    """
+    Equation 25 and 26 from https://doi.org/10.1016/j.procs.2010.04.041
+    -laplacian(u) = f
+    -f(x, y) = (x^2 + y^2) * e^(x*y)
+    u(a, y) = u(x, a) = u(b, y) = u(x, b) = e^(x*y)
+    (x,y) = [a,b]x[a,b]
+
+    u(x, y) = e^(x*y)
+    """
+
+    @staticmethod
+    def source(input: torch.Tensor) -> torch.Tensor:
+        out: torch.Tensor = -(input[:, 0] ** 2 + input[:, 1] ** 2) * torch.exp(
+            input[:, 0] * input[:, 1]).unsqueeze(1)
+        return out
+
+    @staticmethod
+    def exact(input: torch.Tensor) -> torch.Tensor:
+        return (torch.exp(input[:, 0] * input[:, 1])).unsqueeze(1)
+
+    @staticmethod
+    def bc(model: models.NN) -> torch.Tensor:
+        residual = model.output - Problem2.exact(model.input)
+        return residual.pow(2).mean()
+
 
 class Problem3:
-    pass
+    """
+    Example 3 from
+    https://www.researchgate.net/publication
+    /266007367_An_Efficient_Direct_Method_to_Solve_the_Three_Dimensional_Poisson's_Equation
+    -laplacian(u) = f
+    -f(x, y, z) = 2 * (xy + xz + yz)
+    u(0, y, z) = u(x, 0, z) = u(x, y, 0) =  0
+    u(1, y, z) = yz(1 + y + z)
+    u(x, 1, z) = xz(x + 1 + z)
+    u(x, y, 1) = xy(x + y + 1)
+    (implemented as u(1, y, z) = u(x, 1, z) = u(x, y, 1) = xyz(x + y + z))
+    (x,y,z) = [0,1]x[0,1]x[0,1]
+
+    u(x, y, z) = xyz(x + y + z)
+    """
+
+    @staticmethod
+    def source(input: torch.Tensor) -> torch.Tensor:
+        return -(2 * (
+            input[:, 0] * input[:, 1]
+            + input[:, 0] * input[:, 2]
+            + input[:, 1] * input[:, 2])
+        ).unsqueeze(1)
+
+    @staticmethod
+    def exact(input: torch.Tensor) -> torch.Tensor:
+        return (input[:, 0] * input[:, 1] * input[:, 2] * (
+                input[:, 0] + input[:, 1] + input[:, 2])).unsqueeze(1)
+
+    # dirichlet bc
+
+    @staticmethod
+    def bc(model: models.NN) -> torch.Tensor:
+        residual = model.output - Problem3.exact(model.input)
+        return residual.pow(2).mean()
+
 
 class Problem4:
-    pass
+    """
+    Example 4 from
+    https://www.researchgate.net/publication
+    /266007367_An_Efficient_Direct_Method_to_Solve_the_Three_Dimensional_Poisson's_Equation
+    -laplacian(u) = f
+    -f(x, y, z) = 6
+    u(0, y, z) = y^2 + z^2
+    u(x, 0, z) = x^2 + z^2
+    u(x, y, 0) = x^2 + y^2
+    u(1, y, z) = 1 + y^2 + z^2
+    u(x, 1, z) = 1 + x^2 + z^2
+    u(x, y, 1) = 1 + x^2 + y^2
+    (implemented as u(0, y, z) = u(x, 0, z) = u(x, y, 0) = u(1, y, z) = u(x,
+    1, z) = u(x, y, 1) = x^2 + y^2 + z^2)
+    (x,y,z) = [0,1]x[0,1]x[0,1]
+
+    u(x, y, z) = x^2 + y^2 + z^2
+    """
+
+    @staticmethod
+    def source(input: torch.Tensor) -> torch.Tensor:
+        return ((input[:, 0] * 0) - 6).unsqueeze(1)
+
+    @staticmethod
+    def exact(input: torch.Tensor) -> torch.Tensor:
+        out: torch.Tensor = (
+                input[:, 0] ** 2 + input[:, 1] ** 2 + input[:, 2] ** 2
+        ).unsqueeze(1)
+        return out
+
+    @staticmethod
+    def bc(model: models.NN) -> torch.Tensor:
+        residual = model.output - Problem4.exact(model.input)
+        return residual.pow(2).mean()
+
 
 class Problem5:
     """
+    Example 5 from
+    https://www.researchgate.net/publication
+    /266007367_An_Efficient_Direct_Method_to_Solve_the_Three_Dimensional_Poisson's_Equation
     -laplacian(u) = f
-    f(x, y, z) = pi^2 * x * y * sin(pi * z)
+    -f(x, y, z) = -pi^2 * x * y * sin(pi * z)
     u(0, x, z) = u(x, 0, z) = u(x, y, 0) = u(x, y, 1) = 0
     u(1, y, z) = y * sin(pi * z)
     u(x, 1, z) = x * sin(pi * z)
     (implemented as u(1, y, z) = u(x, 1, z) = x * y * sin(pi * z))
+    (x,y,z) = [0,1]x[0,1]x[0,1]
 
     u(x, y, z) = x * y * sin(pi * z)
     """
+
     @staticmethod
     def source(input: torch.Tensor) -> torch.Tensor:
-        # not negative as in the paper because the loss fn is for -laplacian(u) = f
         return ((torch.pi ** 2) * input[:, 0] * input[:, 1] * torch.sin(
             torch.pi * input[:, 2])).unsqueeze(1)
 
@@ -137,11 +254,39 @@ class Problem5:
         return (input[:, 0] * input[:, 1] * torch.sin(
             torch.pi * input[:, 2])).unsqueeze(1)
 
+    # dirichlet bc
+
     @staticmethod
     def bc(model: models.NN) -> torch.Tensor:
-        residual = model.output - (model.input[:, 0] * model.input[:, 1]* torch.sin(torch.pi * model.input[:, 2])).unsqueeze(1)
+        residual = model.output - Problem5.exact(model.input)
         return residual.pow(2).mean()
 
 
 class Problem6:
-    pass
+    """
+    Example 6 from
+    https://www.researchgate.net/publication
+    /266007367_An_Efficient_Direct_Method_to_Solve_the_Three_Dimensional_Poisson's_Equation
+    -laplacian(u) = f
+    -f(x, y, z) = -3 * pi^2 * sin(pi * x) * sin(pi * y) * sin(pi * z)
+    u(0, x, z) = u(x, 0, z) = u(x, y, 0) = u(1, y, z) = u(x, 1, z) = u(x, y,
+    1) = 0
+    (x,y,z) = [0,1]x[0,1]x[0,1]
+
+    u(x, y, z) = sin(pi * x) * sin(pi * y) * sin(pi * z)
+    """
+
+    @staticmethod
+    def source(input: torch.Tensor) -> torch.Tensor:
+        return (3 * (torch.pi ** 2) * torch.sin(
+            torch.pi * input[:, 0]) * torch.sin(
+            torch.pi * input[:, 1]) * torch.sin(
+            torch.pi * input[:, 2])).unsqueeze(1)
+
+    @staticmethod
+    def exact(input: torch.Tensor) -> torch.Tensor:
+        return (torch.sin(torch.pi * input[:, 0]) * torch.sin(
+            torch.pi * input[:, 1]) * torch.sin(
+            torch.pi * input[:, 2])).unsqueeze(1)
+
+    # dirichlet bc
