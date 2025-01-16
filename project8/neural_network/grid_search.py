@@ -154,12 +154,17 @@ class GridSearch:
 
 # Example usage
 def main():
+    drm_2d_laplacian()
+    pinn_2d_laplacian()
+    pinn_2d_wave()
+    drm_problem5()
+    pinn_problem5()
+    
+def drm_2d_laplacian():
     hyperparameters = param_dicts.drm_2d_laplacian()
     hyperparameters = GridSearch.listify(hyperparameters)
     # now all hyperparameters are lists with 1 entry,
     # extend the ones you want to vary
-    hyperparameters['n_epochs'] = [2000]
-    hyperparameters['loss_fn_batch_sizes'] = [[100, 50]]
     # Search domains for key hyperparameters
     hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
     hyperparameters['n_blocks'] = [3, 5, 8, 10]  # Experimenting with depth
@@ -176,15 +181,14 @@ def main():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    best_params, best_loss, best_state = GridSearch.random_search(
+    GridSearch.random_search(
         "drm_2d_laplacian", hyperparameters,top_k=100, n_points=100)
-
-def problem1():
+    
+def pinn_problem5():
     hyperparameters = param_dicts.pinn_problem5()
     hyperparameters = GridSearch.listify(hyperparameters)
     # now all hyperparameters are lists with 1 entry,
     # extend the ones you want to vary
-    hyperparameters['n_epochs'] = [2000]
     # Search domains for key hyperparameters
     hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
     hyperparameters['depth'] = [3, 5, 8, 10]  # Experimenting with depth
@@ -201,7 +205,7 @@ def problem1():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search("pinn_problem1", hyperparameters,top_k=100, n_points=100)
+    GridSearch.random_search("pinn_problem5", hyperparameters,top_k=100, n_points=100)
 
 
 def pinn_2d_wave():
@@ -209,7 +213,6 @@ def pinn_2d_wave():
     hyperparameters = GridSearch.listify(hyperparameters)
     # now all hyperparameters are lists with 1 entry,
     # extend the ones you want to vary
-    hyperparameters['n_epochs'] = [2000]
     # Search domains for key hyperparameters
     hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
     hyperparameters['depth'] = [3, 5, 8, 10]  # Experimenting with depth
@@ -229,12 +232,11 @@ def pinn_2d_wave():
     GridSearch.random_search("pinn_2d_wave", hyperparameters,top_k=100, n_points=100)
     
     
-def drm_problem1():
-    hyperparameters = param_dicts.drm_problem1()
+def drm_problem5():
+    hyperparameters = param_dicts.drm_problem5()
     hyperparameters = GridSearch.listify(hyperparameters)
     # now all hyperparameters are lists with 1 entry,
     # extend the ones you want to vary
-    hyperparameters['n_epochs'] = [2000]
     # Search domains for key hyperparameters
     hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
     hyperparameters['n_blocks'] = [3, 5, 8, 10]  # Experimenting with depth
@@ -251,14 +253,13 @@ def drm_problem1():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search("drm_problem1", hyperparameters,top_k=100, n_points=100)
+    GridSearch.random_search("drm_problem5", hyperparameters,top_k=100, n_points=100)
     
 def pinn_2d_laplacian():
     hyperparameters = param_dicts.pinn_2d_laplacian()
     hyperparameters = GridSearch.listify(hyperparameters)
     # now all hyperparameters are lists with 1 entry,
     # extend the ones you want to vary
-    hyperparameters['n_epochs'] = [2000]
     # Search domains for key hyperparameters
     hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
     hyperparameters['depth'] = [3, 5, 8, 10]  # Experimenting with depth
@@ -278,4 +279,4 @@ def pinn_2d_laplacian():
     GridSearch.random_search("pinn_2d_laplacian", hyperparameters,top_k=100, n_points=100)
     
 if __name__ == "__main__":
-    pinn_2d_laplacian()
+    main()
