@@ -16,7 +16,7 @@ class GridSearch:
         return model, trnr.best_loss
 
     @staticmethod
-    def grid_search(hyperparams, top_k=5, write_results=True):
+    def grid_search(method, hyperparams, top_k=5, write_results=True):
         varying_hps = [key for key in hyperparams if len(hyperparams[key]) > 1]
         best_model_state = None
         best_loss = float('inf')
@@ -48,14 +48,15 @@ class GridSearch:
 
         # write the results to a file, if it doesnt exist, create it
         if write_results:
-            GridSearch.write_search_results(top_k, varying_hps, results, "grid_search_results.txt")
+            GridSearch.write_search_results(combinations, top_k, varying_hps, results, f"grid_search_results_{method}.txt")
         best_params, best_loss, best_model_state = results[0]
         return best_params, best_loss, best_model_state
 
     @staticmethod
-    def write_search_results(top_k, varying_hps, results, file_name, overwrite=False):
+    def write_search_results(n_combs, top_k, varying_hps, results, file_name, overwrite=False):
         mode = "w" if overwrite else "a"
         with open(file_name, mode) as f: # if we want to overwrite, change to "w"
+            f.write(f"Number of combinations: {n_combs}\n")
             f.write(f"\nTop {top_k} results (sorted by loss):\n")
             for i, (params, loss, _) in enumerate(results[:top_k]):
                 f.write(f"Rank {i+1}, loss = {loss}\n")
@@ -65,7 +66,7 @@ class GridSearch:
             f.write("\n" + "-"*50 + "\n")
 
     @staticmethod
-    def random_search(hyperparams, n_points=10, top_k=5, write_results=True):
+    def random_search(method, hyperparams, n_points=10, top_k=5, write_results=True):
         n_combs = GridSearch.n_combinations(hyperparams)
         if n_points > n_combs:
             warn(
@@ -105,7 +106,7 @@ class GridSearch:
                 print(f"    {key}: {params[key]}")
 
         if write_results:
-            GridSearch.write_search_results(top_k, varying_hps, results, "random_search_results.txt")
+            GridSearch.write_search_results(n_combs, top_k, varying_hps, results, f"random_search_results_{method}.txt")
         best_params, best_loss, best_model_state = results[0]
         return best_params, best_loss, best_model_state
 
@@ -175,33 +176,106 @@ def main():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    best_params, best_loss, best_state = GridSearch.grid_search(
-        hyperparameters,top_k=100)
+    best_params, best_loss, best_state = GridSearch.random_search(
+        "drm_2d_laplacian", hyperparameters,top_k=100, n_points=100)
 
 def problem1():
     hyperparameters = param_dicts.pinn_problem1()
     hyperparameters = GridSearch.listify(hyperparameters)
     # now all hyperparameters are lists with 1 entry,
     # extend the ones you want to vary
-    hyperparameters['n_epochs'] = [3000]
+    hyperparameters['n_epochs'] = [2000]
     # Search domains for key hyperparameters
-    hyperparameters['width'] = [64, 128, 256]  # Increasing capacity
-    hyperparameters['depth'] = [2, 4, 8]  # Experimenting with depth
+    hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
+    hyperparameters['depth'] = [3, 5, 8, 10]  # Experimenting with depth
     hyperparameters['act_fn'] = [
         modules.PolyReLU(2),
         modules.PolyReLU(3),
+        modules.PolyReLU(4),
         nn.Tanh(),            # Smooth activation
         nn.ReLU(),            # Standard activation
         nn.SiLU()             # Swish-like activation
     ]
-    hyperparameters['lr'] = [1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
+    hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
 
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search(hyperparameters,top_k=100, n_points=100)
+    GridSearch.random_search("pinn_problem1", hyperparameters,top_k=100, n_points=100)
 
 
+def pinn_2d_wave():
+    hyperparameters = param_dicts.pinn_2d_wave()
+    hyperparameters = GridSearch.listify(hyperparameters)
+    # now all hyperparameters are lists with 1 entry,
+    # extend the ones you want to vary
+    hyperparameters['n_epochs'] = [2000]
+    # Search domains for key hyperparameters
+    hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
+    hyperparameters['depth'] = [3, 5, 8, 10]  # Experimenting with depth
+    hyperparameters['act_fn'] = [
+        modules.PolyReLU(2),
+        modules.PolyReLU(3),
+        modules.PolyReLU(4),
+        nn.Tanh(),            # Smooth activation
+        nn.ReLU(),            # Standard activation
+        nn.SiLU()             # Swish-like activation
+    ]
+    hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
 
+    print(
+        f"Number of combinations: "
+        f"{GridSearch.n_combinations(hyperparameters)}")
+    GridSearch.random_search("pinn_2d_wave", hyperparameters,top_k=100, n_points=100)
+    
+    
+def drm_problem1():
+    hyperparameters = param_dicts.drm_problem1()
+    hyperparameters = GridSearch.listify(hyperparameters)
+    # now all hyperparameters are lists with 1 entry,
+    # extend the ones you want to vary
+    hyperparameters['n_epochs'] = [2000]
+    # Search domains for key hyperparameters
+    hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
+    hyperparameters['n_blocks'] = [3, 5, 8, 10]  # Experimenting with depth
+    hyperparameters['act_fn'] = [
+        modules.PolyReLU(2),
+        modules.PolyReLU(3),
+        modules.PolyReLU(4),
+        nn.Tanh(),            # Smooth activation
+        nn.ReLU(),            # Standard activation
+        nn.SiLU()             # Swish-like activation
+    ]
+    hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
+
+    print(
+        f"Number of combinations: "
+        f"{GridSearch.n_combinations(hyperparameters)}")
+    GridSearch.random_search("drm_problem1", hyperparameters,top_k=100, n_points=100)
+    
+def pinn_2d_laplacian():
+    hyperparameters = param_dicts.pinn_2d_laplacian()
+    hyperparameters = GridSearch.listify(hyperparameters)
+    # now all hyperparameters are lists with 1 entry,
+    # extend the ones you want to vary
+    hyperparameters['n_epochs'] = [2000]
+    # Search domains for key hyperparameters
+    hyperparameters['width'] = [16, 32, 64, 128]  # Increasing capacity
+    hyperparameters['depth'] = [3, 5, 8, 10]  # Experimenting with depth
+    hyperparameters['act_fn'] = [
+        modules.PolyReLU(2),
+        modules.PolyReLU(3),
+        modules.PolyReLU(4),
+        nn.Tanh(),            # Smooth activation
+        nn.ReLU(),            # Standard activation
+        nn.SiLU()             # Swish-like activation
+    ]
+    hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
+
+    print(
+        f"Number of combinations: "
+        f"{GridSearch.n_combinations(hyperparameters)}")
+    GridSearch.random_search("pinn_2d_laplacian", hyperparameters,top_k=100, n_points=100)
+    
 if __name__ == "__main__":
-    problem1()
+    pinn_2d_laplacian()
