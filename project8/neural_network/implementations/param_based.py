@@ -3,8 +3,8 @@ from project8.neural_network.implementations import param_dicts, loss_functions
 
 
 def main() -> None:
-    problem = 1 # set to 0 to ignore
-    hyperparams = param_dicts.pinn_problem1()
+    problem = 0 # set to 0 to ignore
+    hyperparams = param_dicts.pinn_2d_wave()
     model = models.NN.from_param_dict(hyperparams)
     trnr = trainer.trainer(model, hyperparams, verbose=True)
     trnr.train()
@@ -21,7 +21,7 @@ def main() -> None:
         grid = coord_space.fgrid(50)
         grid.requires_grad = False
         output = model(grid)
-        real = loss_functions.problem_1_exact(grid)
+        real = loss_functions.Problem5.exact(grid)
         err = (output - real).abs().max()
         print(f'max error: {err}')
         x, y, t = coord_space.regrid(grid)

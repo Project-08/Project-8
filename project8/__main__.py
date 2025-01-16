@@ -1,9 +1,6 @@
 import argparse
 import logging
 
-from .bench.sparse import bench_solve_tri
-from .sparse import CuPySolve, CuSparseTriSolve, TriSolve
-
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
@@ -30,6 +27,8 @@ def main() -> None:
 
     if args.command == "bench":
         if args.benchmark == "solve-tri":
+            from project8.bench.sparse import bench_solve_tri
+            from project8.sparse import CuPySolve, CuSparseTriSolve, TriSolve
             solvers: list[TriSolve] = []
             for solver in args.solvers:
                 match solver:
