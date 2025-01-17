@@ -16,7 +16,7 @@ class GridSearch:
         return model, trnr.best_loss
 
     @staticmethod
-    def grid_search(method, hyperparams, top_k=5, write_results=True):
+    def grid_search(method, hyperparams, top_k=None, write_results=True):
         varying_hps = [key for key in hyperparams if len(hyperparams[key]) > 1]
         best_model_state = None
         best_loss = float('inf')
@@ -40,6 +40,8 @@ class GridSearch:
             return None, None, None
         results.sort(key=lambda x: x[1])
         # Print top_k results
+        if top_k is None:
+            top_k = len(results)
         print(f"\nTop {top_k} results (sorted by loss):")
         for i, (params, loss, _) in enumerate(results[:top_k]):
             print(f"Rank {i+1}, loss = {loss}")
@@ -181,8 +183,8 @@ def drm_2d_laplacian():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search(
-        "drm_2d_laplacian", hyperparameters,top_k=100, n_points=100)
+    GridSearch.grid_search(
+        "drm_2d_laplacian", hyperparameters)
     
 def pinn_problem5():
     hyperparameters = param_dicts.pinn_problem5()
@@ -205,7 +207,7 @@ def pinn_problem5():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search("pinn_problem5", hyperparameters,top_k=100, n_points=100)
+    GridSearch.grid_search("pinn_problem5", hyperparameters)
 
 
 def pinn_2d_wave():
@@ -229,7 +231,7 @@ def pinn_2d_wave():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search("pinn_2d_wave", hyperparameters,top_k=100, n_points=100)
+    GridSearch.grid_search("pinn_2d_wave", hyperparameters)
     
     
 def drm_problem5():
@@ -253,7 +255,7 @@ def drm_problem5():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search("drm_problem5", hyperparameters,top_k=100, n_points=100)
+    GridSearch.grid_search("drm_problem5", hyperparameters)
     
 def pinn_2d_laplacian():
     hyperparameters = param_dicts.pinn_2d_laplacian()
@@ -276,7 +278,7 @@ def pinn_2d_laplacian():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search("pinn_2d_laplacian", hyperparameters,top_k=100, n_points=100)
+    GridSearch.grid_search("pinn_2d_laplacian", hyperparameters)
     
 if __name__ == "__main__":
     main()
