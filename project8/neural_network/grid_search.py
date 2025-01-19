@@ -17,6 +17,7 @@ class GridSearch:
 
     @staticmethod
     def grid_search(method, hyperparams, top_k=None, write_results=True):
+        n_combs = GridSearch.n_combinations(hyperparams)
         varying_hps = [key for key in hyperparams if len(hyperparams[key]) > 1]
         best_model_state = None
         best_loss = float('inf')
@@ -50,7 +51,7 @@ class GridSearch:
 
         # write the results to a file, if it doesnt exist, create it
         if write_results:
-            GridSearch.write_search_results(combinations, top_k, varying_hps, results, f"grid_search_results_{method}.txt")
+            GridSearch.write_search_results(n_combs, top_k, varying_hps, results, f"grid_search_results_{method}.txt")
         best_params, best_loss, best_model_state = results[0]
         return best_params, best_loss, best_model_state
 
