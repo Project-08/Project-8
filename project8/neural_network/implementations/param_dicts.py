@@ -24,7 +24,7 @@ def pinn_2d_laplacian() -> utils.Params:
         'optimizer': torch.optim.Adam,
         'lr': 1e-3,
         'n_epochs': 5000,
-        'loss_fn_batch_sizes': [100, 50],
+        'loss_fn_batch_sizes': [1000, 500],
         # problem definition
         'loss_fns': [
             lf.PINN.laplacian(lf.sinxy_source),

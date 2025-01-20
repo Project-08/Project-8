@@ -157,11 +157,12 @@ class GridSearch:
 
 # Example usage
 def main():
-    drm_2d_laplacian()
+    # drm_2d_laplacian()
+    # pinn_2d_laplacian()
+    # pinn_2d_wave()
+    # drm_problem5()
+    # pinn_problem5()
     pinn_2d_laplacian()
-    pinn_2d_wave()
-    drm_problem5()
-    pinn_problem5()
     
 def drm_2d_laplacian():
     hyperparameters = param_dicts.drm_2d_laplacian()
