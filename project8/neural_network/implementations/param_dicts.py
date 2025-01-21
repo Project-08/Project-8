@@ -498,3 +498,55 @@ def Problem6(method: str = 'pinn') -> utils.Params:
         case _:
             raise ValueError(f'invalid method: {method}')
     return hyperparams
+
+
+def NavierStokes2D(method: str = 'pinn') -> utils.Params:
+    device = utils.get_device()
+    h, L, T, U_m = 0.41, 2.2, 8, 1.5
+    coord_space = utils.ParameterSpace([[0, L], [0, h], [0, T]], device)
+    bc_select_top_bottom = torch.tensor([[0, 0], [1, 1], [0, 0]], device=device)
+    # cylinder
+    bc_select_inlet = torch.tensor([[1, 0], [0, 0], [0, 0]], device=device)
+    bc_select_outlet = torch.tensor([[0, 1], [0, 0], [0, 0]], device=device)
+    bc_select_ic = torch.tensor([[0, 0], [0, 0], [1, 0]], device=device)
+    hyperparams: utils.Params = {
+        'device': device,
+        'n_in': 3,
+        'n_out': 3,
+        'weight_init_fn': torch.nn.init.xavier_uniform_,
+        'bias_init_fn': torch.nn.init.zeros_,
+        'weight_init_kwargs': {'gain': 0.5},
+        'bias_init_kwargs': {},
+        'optimizer': torch.optim.Adam,
+        'lr': 1e-3,
+        'n_epochs': 10000,
+        'loss_fn_batch_sizes': [500, 500, 500, 500, 500, 500],
+        'loss_weights': [1, 10, 10, 1, 1, 1],
+        'loss_fn_data': [
+            coord_space.rand(100_000),
+            coord_space.select_bndry_rand(100_000, bc_select_top_bottom),
+            lf.NavierStokes2D.cylinder_bndry_data(100_000),
+            coord_space.select_bndry_rand(100_000, bc_select_inlet),
+            coord_space.select_bndry_rand(100_000, bc_select_outlet),
+            coord_space.select_bndry_rand(100_000, bc_select_ic),
+        ],
+    }
+    match method:
+        case 'pinn':
+            hyperparams.update({
+                'model_constructor': 'rectangular_fnn',
+                'act_fn': torch.nn.Tanh(),
+                'width': 512,
+                'depth': 8,
+                'loss_fns': [
+                    lf.PINN.navier_stokes_2d(),
+                    lf.NavierStokes2D.top_bottom_bc,
+                    lf.NavierStokes2D.cylinder_bc,
+                    lf.NavierStokes2D.inlet_bc(U_m, h),
+                    lf.NavierStokes2D.outlet_bc,
+                    lf.NavierStokes2D.initial_condition(device=device),
+                ],
+            })
+        case _:
+            raise ValueError(f'invalid method: {method}')
+    return hyperparams

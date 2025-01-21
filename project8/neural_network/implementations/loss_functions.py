@@ -71,6 +71,54 @@ class PINN:
                 time_dependent=True) - f
             return residual.pow(2).mean()
 
+    class navier_stokes_2d:
+        """
+        2d incompressible Navier-Stokes equation
+        velocity components = [U, V]
+        pressure = P
+        density = rho
+        viscosity = v
+        U_t + U*U_x + V*U_y = (1/rho) * (-P_x + v * laplacian(U))
+        V_t + U*V_x + V*V_y = (1/rho) * (-P_y + v * laplacian(V))
+        U_x + V_y = 0
+        """
+        def __init__(self,
+                     viscosity: float = 1e-3,
+                     density: float = 1.0,
+                     a: float = 1.0,
+                     b: float = 1.0,
+                     c: float = 1.0
+                     ) -> None:
+            self.v = viscosity
+            self.rho = density
+            self.a = a
+            self.b = b
+            self.c = c
+
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            u = model.output[:, 0].unsqueeze(1)
+            v = model.output[:, 1].unsqueeze(1)
+            # u: 0, v: 1, p: 2
+            u_x = diffop.partial_derivative(model, 0, out_dim_index=0)
+            u_y = diffop.partial_derivative(model, 1, out_dim_index=0)
+            u_t = diffop.partial_derivative(model, 2, out_dim_index=0)
+            v_x = diffop.partial_derivative(model, 0, out_dim_index=1)
+            v_y = diffop.partial_derivative(model, 1, out_dim_index=1)
+            v_t = diffop.partial_derivative(model, 2, out_dim_index=1)
+            p_x = diffop.partial_derivative(model, 0, out_dim_index=2)
+            p_y = diffop.partial_derivative(model, 1, out_dim_index=2)
+            laplacian_u = diffop.laplacian(model, out_dim_index=0, time_dependent=True)
+            laplacian_v = diffop.laplacian(model, out_dim_index=1, time_dependent=True)
+            u_residual = u_t + u * u_x + v * u_y - (1 / self.rho) * (-p_x + self.v * laplacian_u)
+            v_residual = v_t + u * v_x + v * v_y - (1 / self.rho) * (-p_y + self.v * laplacian_v)
+            continuity = u_x + v_y
+            return self.a * u_residual.pow(2).mean() \
+                + self.b * v_residual.pow(2).mean() \
+                + self.c *  continuity.pow(2).mean()
+
+
+
+
 
 class DRM:
     class laplacian:
@@ -99,6 +147,81 @@ class General:
 
         def __call__(self, model: models.NN) -> torch.Tensor:
             return (model.output - self.fn(model.input)).pow(2).mean()
+
+
+class NavierStokes2D:
+    """
+    Test case 2D-2 from
+    https://wwwold.mathematik.tu-dortmund.de/lsiii/cms/papers/SchaeferTurek1996.pdf
+    with zero pressure outlet condition
+    velocity components = [U, V]
+    pressure = P
+    density = rho
+    viscosity = v
+    U_t + U*U_x + V*U_y = (1/rho) * (-P_x + v * laplacian(U))
+    V_t + U*V_x + V*V_y = (1/rho) * (-P_y + v * laplacian(V))
+    U_x + V_y = 0
+                                                        changes
+    U(x, 0, t) = U(x, h, t) = 0                         no condition on U / less strict
+    V(x, 0, t) = V(x, h, t) = 0
+    V(0, y, t) = 0
+    U(0, y, t) = 4 * U_m * y(h-y) / h^2
+    P(L, y, t) = 0                                      0 neumann on u v and p
+    U(x, y, t) = V(x, y, t) = 0 | x,y,t on cylinder boundary
+    U(x, y, 0) = V(x, y, 0) = P(x, y, 0) = 0            all can have own IC (still 0)
+    x = [0, L], y = [0, h], t = [0, T]
+    """
+
+    @staticmethod
+    def cylinder_bndry_data(
+            n: int,
+            cx: float = 0.2,
+            cy: float = 0.2,
+            r: float = 0.05,
+            t_range: tuple[float,float] = (0, 8)
+    ) -> torch.Tensor:
+        theta = torch.rand(n, dtype=torch.float64) * 2 * torch.pi
+        x = cx + r * torch.cos(theta)
+        y = cy + r * torch.sin(theta)
+        t = torch.rand(n, dtype=torch.float64) * (t_range[1] - t_range[0]) + t_range[0]
+        points = torch.stack((x, y, t), dim=1)
+        return points
+
+    class inlet_bc:
+        def __init__(self, U_m: float = 1.5, h: float = 0.41):
+            self.U_m = U_m
+            self.h = h
+
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            U = model.output[:, 0]
+            V = model.output[:, 1]
+            y = model.input[:, 1]
+            return (U - 4 * self.U_m * y * (self.h - y) / self.h ** 2).pow(2).mean() + V.pow(2).mean()
+
+    @staticmethod
+    def outlet_bc(model: models.NN) -> torch.Tensor:
+        # was p=0, now P_x = U_x = V_x = 0
+        return diffop.gradient(model, 2)[:, 0].pow(2).mean()\
+                + diffop.gradient(model, 1)[:, 0].pow(2).mean()\
+                + diffop.gradient(model, 0)[:, 0].pow(2).mean()
+
+    @staticmethod
+    def cylinder_bc(model: models.NN) -> torch.Tensor:
+        U = model.output[:, 0]
+        V = model.output[:, 1]
+        return U.pow(2).mean() + V.pow(2).mean()
+
+    @staticmethod
+    def top_bottom_bc(model: models.NN) -> torch.Tensor:
+        return model.output[:, 1].pow(2).mean() + 0.1 * model.output[:, 0].pow(2).mean()
+
+    class initial_condition:
+        # was all 0
+        def __init__(self, device: str, U0: float = 0, V0: float = 0.0, P0: float = 0.0):
+            self.ic = torch.tensor([[U0, V0, P0]], dtype=torch.float64, device=device)
+
+        def __call__(self, model: models.NN) -> torch.Tensor:
+            return (model.output - self.ic).pow(2).mean()
 
 
 class Problem1:
@@ -290,3 +413,4 @@ class Problem6:
             torch.pi * input[:, 2])).unsqueeze(1)
 
     # dirichlet bc
+

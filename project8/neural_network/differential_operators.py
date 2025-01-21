@@ -98,7 +98,7 @@ def laplacian(
     Not divergence(gradient(out_dim_index)),
     as that doesn't cache second diffs.
     """
-    laplacian_u = torch.zeros_like(io.output[:, 0].unsqueeze(1))
+    laplacian_u = torch.zeros_like(io.output[:, out_dim_index].unsqueeze(1))
     dims = io.input.shape[1] if not time_dependent else io.input.shape[1] - 1
     for i in range(dims):
         laplacian_u += partial_derivative(
@@ -107,3 +107,9 @@ def laplacian(
             out_dim_index=out_dim_index
         )
     return laplacian_u
+
+def add_output_col(io: arg_type, col: torch.Tensor) -> None:
+    """
+    Adds col to io output.
+    """
+    io.output = torch.cat((io.output, col), dim=1)
