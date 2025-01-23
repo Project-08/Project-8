@@ -2,31 +2,41 @@ from project8.neural_network import utils, models, trainer, differential_operato
 from project8.neural_network.implementations import param_dicts, loss_functions
 import torch
 
-def error_stats(error: torch.Tensor) -> None:
-    abs_err = error.abs()
-    print(f'Error stats:\n'
-          f'max: {abs_err.max()}\n'
-          f'min: {abs_err.abs().min()}\n'
-          f'avg: {abs_err.abs().mean()}\n'
-          f'std: {abs_err.abs().std()}\n'
-          f'rmse: {abs_err.pow(2).mean().sqrt()}')
+"""
+new_model = True to train a new model
+Training happens on gpu unless not available
+
+new_model = False to load a model
+select which model to load by changing the name in 
+checkpoints.load_model('name.pth').
+The models are saved in project8/models.
+Inferring happens on cpu by default so there is more memory available
+you can change infer device by setting 
+utils.set_device_override to 'cuda' or 'cpu'
+
+hyperparams = param_dicts.Problem(1-6)('pinn') or ('drm')
+Select which set of hyperparameters and problem definition to use
+
+exact_sol = loss_functions.Problem(1-6).exact
+Select the exact solution to compare the output with,
+ if None then no comparison is done
+"""
+
 
 def main() -> None:
     # define problem
-    new_model = False
+    new_model = True       # Set to True to train a new model
     if not new_model:
-        utils.set_device_override('cpu')
-    hyperparams = param_dicts.Problem2('drm') # 'pinn' or 'drm'
-    exact_sol = loss_functions.Problem2.exact
+        utils.set_device_override('cpu')        # Default to infer is on cpu
+    hyperparams = param_dicts.Problem5('pinn') # Problem(1-6) 'pinn' or 'drm'
+    exact_sol = loss_functions.Problem5.exact # Problem(1-6).exact, make sure to change this with the problem
     # define model
-    # Make a new one
     if new_model:
         model = models.NN.from_param_dict(hyperparams)
         trnr = trainer.trainer(model, hyperparams, verbose=True)
         trnr.train()
-    # Or load a saved one
-    else:
-        model = checkpoints.load_model('problem2_drm.pth')
+    else: # change the model to load here, they are saved in the models folder
+        model = checkpoints.load_model('problem5_pinn.pth')
         model.to(hyperparams['device'])
 
     # plot output
@@ -42,7 +52,7 @@ def main() -> None:
         if exact_sol is not None:
             real = exact_sol(grid)
             err = (output - real)
-            error_stats(err)
+            utils.error_stats(err)
             u = coord_space.regrid(real)[0]
             err = coord_space.regrid(err)[0]
             utils.plot_2d(x, y, err, title='output_error', fig_id=3)
@@ -57,7 +67,7 @@ def main() -> None:
         if exact_sol is not None:
             real = exact_sol(grid)
             err = (output - real)
-            error_stats(err)
+            utils.error_stats(err)
             u = coord_space.regrid(real)[0]
             err = coord_space.regrid(err)[0]
             utils.anim_2d(x, y, t, err, title='output_error', fig_id=3)
@@ -77,7 +87,7 @@ def main() -> None:
             if exact_sol is not None:
                 err = (output - real[:, i]).abs().max()
                 print(f'output {i}')
-                error_stats(err)
+                utils.error_stats(err)
                 u = coord_space.regrid(real[:, i].unsqueeze(1))[0]
                 utils.anim_2d(x, y, t, u, title=f'output_{i}_exact', fig_id=2*i+1)
 

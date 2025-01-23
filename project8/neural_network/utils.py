@@ -423,3 +423,13 @@ class Params(TypedDict, total=False):
     # drm
     n_blocks: int
     n_linear_drm: int
+
+
+def error_stats(error: torch.Tensor) -> None:
+    abs_err = error.abs()
+    print(f'Error stats:\n'
+          f'max: {abs_err.max()}\n'
+          f'min: {abs_err.abs().min()}\n'
+          f'avg: {abs_err.abs().mean()}\n'
+          f'std: {abs_err.abs().std()}\n'
+          f'rmse: {abs_err.pow(2).mean().sqrt()}')
