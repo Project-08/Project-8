@@ -429,7 +429,7 @@ def error_stats(error: torch.Tensor) -> None:
     abs_err = error.abs()
     print(f'Error stats:\n'
           f'max: {abs_err.max()}\n'
-          f'min: {abs_err.abs().min()}\n'
-          f'avg: {abs_err.abs().mean()}\n'
-          f'std: {abs_err.abs().std()}\n'
-          f'rmse: {abs_err.pow(2).mean().sqrt()}')
+          f'min: {abs_err.min()}\n'
+          f'avg: {abs_err.mean()}\n'
+          f'std: {error.std()}\n'
+          f'rmse: {error.pow(2).mean().sqrt()}')

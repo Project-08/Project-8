@@ -25,18 +25,18 @@ Select the exact solution to compare the output with,
 
 def main() -> None:
     # define problem
-    new_model = True       # Set to True to train a new model
+    new_model = False       # Set to True to train a new model
     if not new_model:
         utils.set_device_override('cpu')        # Default to infer is on cpu
-    hyperparams = param_dicts.Problem1('pinn') # Problem(1-6) 'pinn' or 'drm'
-    exact_sol = loss_functions.Problem1.exact # Problem(1-6).exact, make sure to change this with the problem
+    hyperparams = param_dicts.Problem5('pinn') # Problem(1-6) 'pinn' or 'drm'
+    exact_sol = loss_functions.Problem5.exact # Problem(1-6).exact, make sure to change this with the problem
     # define model
     if new_model:
         model = models.NN.from_param_dict(hyperparams)
         trnr = trainer.trainer(model, hyperparams, verbose=True)
         trnr.train()
     else: # change the model to load here, they are saved in the models folder
-        model = checkpoints.load_model('problem5_pinn.pth')
+        model = checkpoints.load_model('p5_pinn_opt.pth')
         model.to(hyperparams['device'])
 
     # plot output

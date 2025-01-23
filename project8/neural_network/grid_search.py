@@ -65,7 +65,7 @@ class GridSearch:
             f.write("\n" + "-"*50 + "\n")
 
     @staticmethod
-    def random_search(hyperparams, n_points=10, top_k=5, write_results=True):
+    def random_search(hyperparams, n_points=10, top_k=5, write_results=True, name="random_search_results.txt"):
         n_combs = GridSearch.n_combinations(hyperparams)
         if n_points > n_combs:
             warn(
@@ -106,7 +106,7 @@ class GridSearch:
                 print(f"    {key}: {params[key]}")
 
         if write_results:
-            GridSearch.write_search_results(top_k, varying_hps, results, "random_search_results.txt")
+            GridSearch.write_search_results(top_k, varying_hps, results, name)
         best_params, best_loss, best_model_state = results[0]
         return best_params, best_loss, best_model_state
 
@@ -176,9 +176,8 @@ def main():
     best_params, best_loss, best_state = GridSearch.grid_search(
         hyperparameters,top_k=100)
 
-def problem1():
-    hyperparameters = param_dicts.Problem1('pinn')
-    hyperparameters = GridSearch.listify(hyperparameters)
+def pinn_2d_search(param_dict, name="pinn_2d_search_results.txt"):
+    hyperparameters = GridSearch.listify(param_dict)
     hyperparameters['n_epochs'] = [3000]
     hyperparameters['width'] = [16, 32, 64, 128]
     hyperparameters['depth'] = [2, 4, 8, 10]
@@ -186,8 +185,8 @@ def problem1():
         modules.PolyReLU(2),
         modules.PolyReLU(3),
         modules.PolyReLU(4),
+        modules.Sin(),
         nn.Tanh(),
-        nn.ReLU(),
         nn.SiLU()
     ]
     hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]
@@ -200,9 +199,120 @@ def problem1():
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search(hyperparameters,top_k=50, n_points=50)
+    GridSearch.random_search(
+        hyperparameters,
+        top_k=50,
+        n_points=50,
+        write_results=True,
+        name=name
+    )
 
+def drm_2d_search(param_dict, name="drm_2d_search_results.txt"):
+    hyperparameters = GridSearch.listify(param_dict)
+    hyperparameters['n_epochs'] = [3000]
+    hyperparameters['width'] = [16, 32, 64, 128]
+    hyperparameters['n_blocks'] = [1, 2, 4]
+    hyperparameters['n_linear_drm'] = [2, 3]
+    hyperparameters['act_fn'] = [
+        nn.ReLU(),
+        modules.PolyReLU(2),
+        modules.PolyReLU(3),
+        modules.PolyReLU(4),
+        nn.Tanh(),
+        nn.SiLU()
+    ]
+    hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]
+    hyperparameters['weight_init_kwargs'] = [
+        {'gain': 0.5},
+        {'gain': 1.0},
+        {'gain': 1.5},
+    ]
+
+    print(
+        f"Number of combinations: "
+        f"{GridSearch.n_combinations(hyperparameters)}")
+    GridSearch.random_search(
+        hyperparameters,
+        top_k=50,
+        n_points=50,
+        write_results=True,
+        name=name
+    )
+
+def pinn_3d_search(param_dict, name="pinn_3d_search_results.txt"):
+    hyperparameters = GridSearch.listify(param_dict)
+    hyperparameters['n_epochs'] = [3000]
+    hyperparameters['width'] = [32, 64, 128, 256]
+    hyperparameters['depth'] = [2, 4, 8, 10]
+    hyperparameters['act_fn'] = [
+        modules.PolyReLU(2),
+        modules.PolyReLU(3),
+        modules.PolyReLU(4),
+        modules.Sin(),
+        nn.Tanh(),
+        nn.SiLU()
+    ]
+    hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]
+    hyperparameters['weight_init_kwargs'] = [
+        {'gain': 0.5},
+        {'gain': 1.0},
+        {'gain': 1.5},
+    ]
+
+    print(
+        f"Number of combinations: "
+        f"{GridSearch.n_combinations(hyperparameters)}")
+    GridSearch.random_search(
+        hyperparameters,
+        top_k=50,
+        n_points=50,
+        write_results=True,
+        name=name
+    )
+
+def drm_3d_search(param_dict, name="drm_3d_search_results.txt"):
+    hyperparameters = GridSearch.listify(param_dict)
+    hyperparameters['n_epochs'] = [3000]
+    hyperparameters['width'] = [32, 64, 128, 256]
+    hyperparameters['n_blocks'] = [1, 2, 4]
+    hyperparameters['n_linear_drm'] = [2, 3]
+    hyperparameters['act_fn'] = [
+        nn.ReLU(),
+        modules.PolyReLU(2),
+        modules.PolyReLU(3),
+        modules.PolyReLU(4),
+        nn.Tanh(),
+        nn.SiLU()
+    ]
+    hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]
+    hyperparameters['weight_init_kwargs'] = [
+        {'gain': 0.5},
+        {'gain': 1.0},
+        {'gain': 1.5},
+    ]
+
+    print(
+        f"Number of combinations: "
+        f"{GridSearch.n_combinations(hyperparameters)}")
+    GridSearch.random_search(
+        hyperparameters,
+        top_k=50,
+        n_points=50,
+        write_results=True,
+        name=name
+    )
 
 
 if __name__ == "__main__":
-    problem1()
+    # running now
+    # pinn_3d_search(param_dicts.Problem3('pinn'), name="p3_pinn_search_results.txt")
+    # drm_3d_search(param_dicts.Problem3('drm'), name="p3_drm_search_results.txt")
+    # pinn_3d_search(param_dicts.Problem4('pinn'), name="p4_pinn_search_results.txt")
+    # drm_3d_search(param_dicts.Problem4('drm'), name="p4_drm_search_results.txt")
+
+    # previously done
+    # pinn_3d_search(param_dicts.Problem5('pinn'), name="p5_pinn_search_results.txt")
+    # drm_3d_search(param_dicts.Problem5('drm'), name="p5_drm_search_results.txt")
+
+    pinn_3d_search(param_dicts.Problem6('pinn'), name="p6_pinn_search_results.txt")
+    drm_3d_search(param_dicts.Problem6('drm'), name="p6_drm_search_results.txt")

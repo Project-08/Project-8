@@ -118,10 +118,8 @@ def Problem1(method: str = 'pinn') -> utils.Params:
         'n_out': 1,
         'weight_init_fn': torch.nn.init.xavier_uniform_,
         'bias_init_fn': torch.nn.init.zeros_,
-        'weight_init_kwargs': {'gain': 0.5},
         'bias_init_kwargs': {},
         'optimizer': torch.optim.Adam,
-        'lr': 1e-3,
         'n_epochs': 5000,
         'loss_fn_batch_sizes': [1000, 600],
         'loss_weights': [1, 100],
@@ -131,24 +129,28 @@ def Problem1(method: str = 'pinn') -> utils.Params:
         ],
     }
     match method:
-        case 'pinn':
+        case 'pinn': # optimized
             hyperparams.update({
                 'model_constructor': 'rectangular_fnn',
-                'act_fn': torch.nn.Tanh(),
-                'width': 20,
-                'depth': 8,
+                'weight_init_kwargs': {'gain': 1.5},
+                'act_fn': torch.nn.SiLU(),
+                'width': 64,
+                'depth': 10,
+                'lr': 1e-2,
                 'loss_fns': [
                     lf.PINN.laplacian(lf.Problem1.source),
                     lf.General.dirichlet_bc,
                 ],
             })
-        case 'drm':
+        case 'drm': # optimized
             hyperparams.update({
                 'model_constructor': 'drm',
-                'act_fn': modules.PolyReLU(3),
-                'width': 20,
+                'weight_init_kwargs': {'gain': 1.0},
+                'act_fn': modules.PolyReLU(2),
+                'width': 16,
                 'n_blocks': 4,
                 'n_linear_drm': 2,
+                'lr': 1e-2,
                 'loss_fns': [
                     lf.DRM.laplacian(lf.Problem1.source),
                     lf.General.dirichlet_bc,
@@ -169,10 +171,9 @@ def Problem2(method: str = 'pinn',
         'n_out': 1,
         'weight_init_fn': torch.nn.init.xavier_uniform_,
         'bias_init_fn': torch.nn.init.zeros_,
-        'weight_init_kwargs': {'gain': 0.5},
+        'weight_init_kwargs': {'gain': 1.0},
         'bias_init_kwargs': {},
         'optimizer': torch.optim.Adam,
-        'lr': 1e-3,
         'n_epochs': 5000,
         'loss_fn_batch_sizes': [1000, 600],
         'loss_weights': [1, 100],
@@ -182,12 +183,13 @@ def Problem2(method: str = 'pinn',
         ],
     }
     match method:
-        case 'pinn':
+        case 'pinn': # optimized
             hyperparams.update({
                 'model_constructor': 'rectangular_fnn',
-                'act_fn': torch.nn.Tanh(),
-                'width': 20,
+                'act_fn': modules.PolyReLU(2),
+                'width': 64,
                 'depth': 8,
+                'lr': 1e-3,
                 'loss_fns': [
                     lf.PINN.laplacian(lf.Problem2.source),
                     lf.Problem2.bc,
@@ -197,9 +199,10 @@ def Problem2(method: str = 'pinn',
             hyperparams.update({
                 'model_constructor': 'drm',
                 'act_fn': modules.PolyReLU(3),
-                'width': 20,
-                'n_blocks': 4,
+                'width': 16,
+                'n_blocks': 1,
                 'n_linear_drm': 2,
+                'lr': 1e-3,
                 'loss_fns': [
                     lf.DRM.laplacian(lf.Problem2.source),
                     lf.Problem2.bc,
@@ -221,13 +224,10 @@ def Problem3(method: str = 'pinn') -> utils.Params:
         'n_out': 1,
         'weight_init_fn': torch.nn.init.xavier_uniform_,
         'bias_init_fn': torch.nn.init.zeros_,
-        'weight_init_kwargs': {'gain': 0.5},
         'bias_init_kwargs': {},
         'optimizer': torch.optim.Adam,
-        'lr': 1e-3,
         'n_epochs': 5000,
         'loss_fn_batch_sizes': [1000, 300, 300],
-        'loss_weights': [1, 100, 100],
         'loss_fn_data': [
             coord_space.rand(100_000),
             coord_space.select_bndry_rand(100_000, bc_select_1),
@@ -235,12 +235,14 @@ def Problem3(method: str = 'pinn') -> utils.Params:
         ],
     }
     match method:
-        case 'pinn':
+        case 'pinn': # optimized
             hyperparams.update({
                 'model_constructor': 'rectangular_fnn',
-                'act_fn': torch.nn.Tanh(),
+                'weight_init_kwargs': {'gain': 1.0},
+                'act_fn': modules.PolyReLU(3),
                 'width': 256,
-                'depth': 8,
+                'depth': 4,
+                'lr': 1e-3,
                 'loss_weights': [1, 10, 100],
                 'loss_fns': [
                     lf.PINN.laplacian(lf.Problem3.source),
@@ -251,10 +253,13 @@ def Problem3(method: str = 'pinn') -> utils.Params:
         case 'drm':
             hyperparams.update({
                 'model_constructor': 'drm',
+                'weight_init_kwargs': {'gain': 1.0},
                 'act_fn': modules.PolyReLU(3),
                 'width': 64,
                 'n_blocks': 4,
                 'n_linear_drm': 2,
+                'lr': 1e-3,
+                'loss_weights': [1, 100, 100],
                 'loss_fns': [
                     lf.DRM.laplacian(lf.Problem3.source),
                     lf.General.dirichlet_bc,
@@ -340,7 +345,7 @@ def Problem5(method: str = 'pinn') -> utils.Params:
         ],
     }
     match method:
-        case 'pinn':
+        case 'pinn': # optimized
             hyperparams.update({
                 'model_constructor': 'rectangular_fnn',
                 'act_fn': torch.nn.SiLU(),
@@ -353,7 +358,7 @@ def Problem5(method: str = 'pinn') -> utils.Params:
                     lf.Problem5.bc,
                 ],
             })
-        case 'drm':
+        case 'drm': # optimized
             hyperparams.update({
                 'model_constructor': 'drm',
                 'act_fn': modules.PolyReLU(4),
