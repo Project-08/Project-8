@@ -1,6 +1,7 @@
 """This file contains some convenience functions for the project"""
 
 import torch
+from torch.utils.data import DataLoader as TorchDataLoader, TensorDataset
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
@@ -283,6 +284,41 @@ class DataLoader:
                self.i * self.batch_size:(self.i + 1) * self.batch_size]
         self.i += 1
         return data.requires_grad_(self.output_requires_grad)
+
+
+# class DataLoader:
+#     """
+#     Optimized DataLoader for training neural networks.
+#     Keeps data on CPU memory and uses multiple workers.
+#     """
+#
+#     def __init__(self, all_data: torch.Tensor, batch_size: int,
+#                  output_requires_grad: bool = False,
+#                  shuffle: bool = True,
+#                  device: Optional[str | torch.device] = None,
+#                  num_workers: int = 4) -> None:
+#         if device is not None:
+#             self.device = device
+#         else:
+#             self.device = str(all_data.device)
+#         self.all_data = all_data.cpu()
+#         self.batch_size = batch_size
+#         self.output_requires_grad = output_requires_grad
+#         self.shuffle = shuffle
+#         self.num_workers = num_workers
+#         self.dataset = TensorDataset(self.all_data)
+#         self.dataloader = TorchDataLoader(self.dataset, batch_size=batch_size,
+#                                           shuffle=shuffle, num_workers=num_workers)
+#         self.iterator = iter(self.dataloader)
+#
+#     def __call__(self) -> torch.Tensor:
+#         try:
+#             data = next(self.iterator)[0]
+#         except StopIteration:
+#             self.iterator = iter(self.dataloader)
+#             data = next(self.iterator)[0]
+#         return data.to(self.device).requires_grad_(self.output_requires_grad)
+
 
 
 class Timer:

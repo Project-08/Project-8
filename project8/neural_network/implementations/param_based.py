@@ -4,8 +4,8 @@ from project8.neural_network.implementations import param_dicts, loss_functions
 
 def main() -> None:
     # define problem
-    hyperparams = param_dicts.NavierStokes2D('pinn')
-    exact_sol = None
+    hyperparams = param_dicts.Problem1('pinn') # 'pinn' or 'drm'
+    exact_sol = loss_functions.Problem1.exact
     # train model
     model = models.NN.from_param_dict(hyperparams)
     trnr = trainer.trainer(model, hyperparams, verbose=True)

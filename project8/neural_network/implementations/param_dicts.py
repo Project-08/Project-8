@@ -502,7 +502,7 @@ def Problem6(method: str = 'pinn') -> utils.Params:
 
 def NavierStokes2D(method: str = 'pinn') -> utils.Params:
     device = utils.get_device()
-    h, L, T, U_m = 0.41, 2.2, 8, 1.5
+    v, rho, h, L, T, U_m = 1e-4, 1.0, 0.41, 2.2, 8, 1.8
     coord_space = utils.ParameterSpace([[0, L], [0, h], [0, T]], device)
     bc_select_top_bottom = torch.tensor([[0, 0], [1, 1], [0, 0]], device=device)
     # cylinder
@@ -539,7 +539,7 @@ def NavierStokes2D(method: str = 'pinn') -> utils.Params:
                 'width': 512,
                 'depth': 8,
                 'loss_fns': [
-                    lf.PINN.navier_stokes_2d(),
+                    lf.PINN.navier_stokes_2d(viscosity=v, density=rho),
                     lf.NavierStokes2D.top_bottom_bc,
                     lf.NavierStokes2D.cylinder_bc,
                     lf.NavierStokes2D.inlet_bc(U_m, h),

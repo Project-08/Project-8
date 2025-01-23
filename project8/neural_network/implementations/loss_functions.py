@@ -162,13 +162,13 @@ class NavierStokes2D:
     V_t + U*V_x + V*V_y = (1/rho) * (-P_y + v * laplacian(V))
     U_x + V_y = 0
                                                         changes
-    U(x, 0, t) = U(x, h, t) = 0                         no condition on U / less strict
+    U(x, 0, t) = U(x, h, t) = 0
     V(x, 0, t) = V(x, h, t) = 0
-    V(0, y, t) = 0
+    V(0, y, t) = 0                                      also neumann 0 for P on inlet
     U(0, y, t) = 4 * U_m * y(h-y) / h^2
-    P(L, y, t) = 0                                      0 neumann on u v and p
+    P(L, y, t) = 0                                      0 neumann on u v and p on outlet
     U(x, y, t) = V(x, y, t) = 0 | x,y,t on cylinder boundary
-    U(x, y, 0) = V(x, y, 0) = P(x, y, 0) = 0            all can have own IC (still 0)
+    U(x, y, 0) = V(x, y, 0) = P(x, y, 0) = 0            all can have own const IC (default 0)
     x = [0, L], y = [0, h], t = [0, T]
     """
 
@@ -196,7 +196,10 @@ class NavierStokes2D:
             U = model.output[:, 0]
             V = model.output[:, 1]
             y = model.input[:, 1]
-            return (U - 4 * self.U_m * y * (self.h - y) / self.h ** 2).pow(2).mean() + V.pow(2).mean()
+            P_x = diffop.partial_derivative(model, 0, out_dim_index=2)
+            return (U - 4 * self.U_m * y * (self.h - y) / self.h ** 2).pow(2).mean()\
+                + V.pow(2).mean()\
+                + P_x.pow(2).mean()
 
     @staticmethod
     def outlet_bc(model: models.NN) -> torch.Tensor:
@@ -213,7 +216,8 @@ class NavierStokes2D:
 
     @staticmethod
     def top_bottom_bc(model: models.NN) -> torch.Tensor:
-        return model.output[:, 1].pow(2).mean() + 0.1 * model.output[:, 0].pow(2).mean()
+        P_y = diffop.partial_derivative(model, 1, out_dim_index=2)
+        return model.output[:, 1].pow(2).mean() + 0.1 * model.output[:, 0].pow(2).mean() + P_y.pow(2).mean()
 
     class initial_condition:
         # was all 0
