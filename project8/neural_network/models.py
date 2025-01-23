@@ -27,6 +27,7 @@ class NN(nn.Module):
         self.cache: dict[str, torch.Tensor] = {}
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+
         self.cache = {}
         self.input = x
         self.output = self.layers[0](x)

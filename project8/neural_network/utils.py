@@ -23,10 +23,20 @@ plot_folder = os.path.join(
     ), 'plots')
 logging.info(f'plot_folder: {plot_folder}')
 
+__device_override = ''
+
+def set_device_override(device: str) -> None:
+    global __device_override
+    if device in ['cpu', 'cuda', 'cuda:0']:
+        __device_override = device
+    else:
+        raise ValueError(f'device({device}) must be "cpu", "cuda", or "cuda:0"')
 
 def get_device(override: str = '') -> str:
     if override != '':
         return override
+    elif __device_override != '':
+        return __device_override
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     if device == 'cpu':
         warn('CUDA/ROCm not available, Using CPU.')
@@ -73,7 +83,7 @@ def plot_plane(x: Union[torch.Tensor, np.ndarray[Any, Any]],
                fig_id: int = 0,
                filename: str = '') -> None:
     x, y, f = if_tensors_to_numpy(x, y, f)
-    if filename is None:
+    if filename == '':
         filename = title + '.png'
     fig = plt.figure(fig_id)
     plt.clf()
