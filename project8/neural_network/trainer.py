@@ -35,7 +35,7 @@ class trainer:
         self.clip_grads = True
         self.clip_value = 1.0
         self.terminate_on_stagnation = True
-        self.stagnation_epochs = 1500
+        self.stagnation_epochs = 1000
 
     def eval_loss_fn(self, i: int) -> torch.Tensor:
         self.model(self.data_loaders[i]())

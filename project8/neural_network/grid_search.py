@@ -83,7 +83,7 @@ class GridSearch:
         results = []
         for params in combinations[:n_points]:
             print(
-                f"Testing hyperparameters:")  # Progress feedback
+                f"Testing hyperparameters {len(results) + 1}:")  # Progress feedback
             for key in varying_hps:
                 print(f"{key}: {params[key]}")
             try:
@@ -91,6 +91,7 @@ class GridSearch:
             except Exception as e:
                 print(f"Error with params {params}: {e}")
                 continue
+            print(f"Loss: {loss}")
             results.append((params, loss, deepcopy(model.state_dict())))
         if not results:
             print("No valid results found.")
@@ -123,11 +124,8 @@ class GridSearch:
         return n
 
 
-# this file works on the nn improvements branch
-# didnt push it because i havent figured out type hints for it yet
-
 # Early termination
-# on which conditions? could be implemenmted in trainer class
+# after 1500 epoch with no improvement
 
 # best loss: last epoch loss?
 # now best loss from trainer object, which is best loss during training
@@ -179,27 +177,30 @@ def main():
         hyperparameters,top_k=100)
 
 def problem1():
-    hyperparameters = param_dicts.pinn_problem5()
+    hyperparameters = param_dicts.Problem1('pinn')
     hyperparameters = GridSearch.listify(hyperparameters)
-    # now all hyperparameters are lists with 1 entry,
-    # extend the ones you want to vary
     hyperparameters['n_epochs'] = [3000]
-    # Search domains for key hyperparameters
-    hyperparameters['width'] = [64, 128, 256]  # Increasing capacity
-    hyperparameters['depth'] = [2, 4, 8]  # Experimenting with depth
+    hyperparameters['width'] = [16, 32, 64, 128]
+    hyperparameters['depth'] = [2, 4, 8, 10]
     hyperparameters['act_fn'] = [
         modules.PolyReLU(2),
         modules.PolyReLU(3),
-        nn.Tanh(),            # Smooth activation
-        nn.ReLU(),            # Standard activation
-        nn.SiLU()             # Swish-like activation
+        modules.PolyReLU(4),
+        nn.Tanh(),
+        nn.ReLU(),
+        nn.SiLU()
     ]
-    hyperparameters['lr'] = [1e-3, 1e-4, 1e-5]  # Covering a wide range of learning rates
+    hyperparameters['lr'] = [1e-2, 1e-3, 1e-4, 1e-5]
+    hyperparameters['weight_init_kwargs'] = [
+        {'gain': 0.5},
+        {'gain': 1.0},
+        {'gain': 1.5},
+    ]
 
     print(
         f"Number of combinations: "
         f"{GridSearch.n_combinations(hyperparameters)}")
-    GridSearch.random_search(hyperparameters,top_k=100, n_points=100)
+    GridSearch.random_search(hyperparameters,top_k=50, n_points=50)
 
 
 
