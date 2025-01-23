@@ -1,0 +1,354 @@
+
+Top 50 results (sorted by loss):
+Rank 1, loss = 7.425400733947754
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.001
+    act_fn: SiLU()
+    width: 32
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 2, loss = 7.427169322967529
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.01
+    act_fn: PolyReLU(n=3)
+    width: 256
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 3, loss = 7.435828685760498
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.001
+    act_fn: Tanh()
+    width: 32
+    n_blocks: 4
+    n_linear_drm: 2
+Rank 4, loss = 7.441830635070801
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.001
+    act_fn: SiLU()
+    width: 256
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 5, loss = 7.443292617797852
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.001
+    act_fn: PolyReLU(n=2)
+    width: 128
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 6, loss = 7.452432155609131
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.001
+    act_fn: PolyReLU(n=2)
+    width: 32
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 7, loss = 7.458578109741211
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.001
+    act_fn: PolyReLU(n=2)
+    width: 128
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 8, loss = 7.464512825012207
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.001
+    act_fn: PolyReLU(n=3)
+    width: 32
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 9, loss = 7.465334892272949
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.01
+    act_fn: SiLU()
+    width: 128
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 10, loss = 7.471238136291504
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: SiLU()
+    width: 128
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 11, loss = 7.472342491149902
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.01
+    act_fn: PolyReLU(n=2)
+    width: 64
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 12, loss = 7.477822780609131
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.001
+    act_fn: PolyReLU(n=3)
+    width: 128
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 13, loss = 7.4903669357299805
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.001
+    act_fn: PolyReLU(n=2)
+    width: 256
+    n_blocks: 2
+    n_linear_drm: 2
+Rank 14, loss = 7.5004496574401855
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.0001
+    act_fn: PolyReLU(n=2)
+    width: 32
+    n_blocks: 2
+    n_linear_drm: 2
+Rank 15, loss = 7.500525951385498
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.01
+    act_fn: SiLU()
+    width: 32
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 16, loss = 7.510251998901367
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.01
+    act_fn: Tanh()
+    width: 64
+    n_blocks: 2
+    n_linear_drm: 2
+Rank 17, loss = 7.512681484222412
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.01
+    act_fn: SiLU()
+    width: 128
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 18, loss = 7.51894474029541
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: SiLU()
+    width: 32
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 19, loss = 7.566535949707031
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.0001
+    act_fn: PolyReLU(n=4)
+    width: 256
+    n_blocks: 2
+    n_linear_drm: 2
+Rank 20, loss = 7.585085868835449
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: PolyReLU(n=2)
+    width: 32
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 21, loss = 7.6114068031311035
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.01
+    act_fn: Tanh()
+    width: 32
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 22, loss = 7.703300952911377
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.0001
+    act_fn: ReLU()
+    width: 128
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 23, loss = 7.730372428894043
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.0001
+    act_fn: PolyReLU(n=4)
+    width: 128
+    n_blocks: 2
+    n_linear_drm: 2
+Rank 24, loss = 7.753066062927246
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.0001
+    act_fn: ReLU()
+    width: 256
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 25, loss = 7.7801713943481445
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.001
+    act_fn: ReLU()
+    width: 256
+    n_blocks: 4
+    n_linear_drm: 2
+Rank 26, loss = 7.786685466766357
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: ReLU()
+    width: 256
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 27, loss = 7.886258602142334
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 1e-05
+    act_fn: Tanh()
+    width: 256
+    n_blocks: 2
+    n_linear_drm: 2
+Rank 28, loss = 7.904088020324707
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 1e-05
+    act_fn: Tanh()
+    width: 32
+    n_blocks: 2
+    n_linear_drm: 3
+Rank 29, loss = 8.144611358642578
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.01
+    act_fn: Tanh()
+    width: 128
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 30, loss = 8.25839614868164
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.0001
+    act_fn: PolyReLU(n=4)
+    width: 64
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 31, loss = 8.55643081665039
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.0001
+    act_fn: SiLU()
+    width: 32
+    n_blocks: 2
+    n_linear_drm: 3
+Rank 32, loss = 9.012439727783203
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 0.0001
+    act_fn: SiLU()
+    width: 128
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 33, loss = 9.019237518310547
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 1e-05
+    act_fn: SiLU()
+    width: 256
+    n_blocks: 4
+    n_linear_drm: 2
+Rank 34, loss = 9.076311111450195
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: Tanh()
+    width: 256
+    n_blocks: 4
+    n_linear_drm: 2
+Rank 35, loss = 9.079642295837402
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: PolyReLU(n=4)
+    width: 64
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 36, loss = 9.102392196655273
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 1e-05
+    act_fn: SiLU()
+    width: 256
+    n_blocks: 2
+    n_linear_drm: 2
+Rank 37, loss = 9.111639022827148
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: PolyReLU(n=4)
+    width: 256
+    n_blocks: 2
+    n_linear_drm: 3
+Rank 38, loss = 9.127762794494629
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: PolyReLU(n=4)
+    width: 128
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 39, loss = 9.155989646911621
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.001
+    act_fn: Tanh()
+    width: 32
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 40, loss = 9.205595970153809
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 1e-05
+    act_fn: Tanh()
+    width: 256
+    n_blocks: 2
+    n_linear_drm: 3
+Rank 41, loss = 9.211881637573242
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.0001
+    act_fn: Tanh()
+    width: 128
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 42, loss = 9.25214958190918
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 0.0001
+    act_fn: Tanh()
+    width: 128
+    n_blocks: 2
+    n_linear_drm: 3
+Rank 43, loss = 9.494998931884766
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 1e-05
+    act_fn: Tanh()
+    width: 64
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 44, loss = 11.462501525878906
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 0.01
+    act_fn: PolyReLU(n=3)
+    width: 128
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 45, loss = 123.81656646728516
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 1e-05
+    act_fn: PolyReLU(n=4)
+    width: 256
+    n_blocks: 2
+    n_linear_drm: 2
+Rank 46, loss = 126.75607299804688
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 1e-05
+    act_fn: PolyReLU(n=3)
+    width: 256
+    n_blocks: 4
+    n_linear_drm: 2
+Rank 47, loss = 149.89303588867188
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 1e-05
+    act_fn: PolyReLU(n=4)
+    width: 32
+    n_blocks: 4
+    n_linear_drm: 3
+Rank 48, loss = 167.03640747070312
+    weight_init_kwargs: {'gain': 0.5}
+    lr: 1e-05
+    act_fn: PolyReLU(n=2)
+    width: 32
+    n_blocks: 1
+    n_linear_drm: 3
+Rank 49, loss = 169.90521240234375
+    weight_init_kwargs: {'gain': 1.5}
+    lr: 1e-05
+    act_fn: PolyReLU(n=3)
+    width: 128
+    n_blocks: 1
+    n_linear_drm: 2
+Rank 50, loss = 173.88589477539062
+    weight_init_kwargs: {'gain': 1.0}
+    lr: 1e-05
+    act_fn: PolyReLU(n=3)
+    width: 32
+    n_blocks: 1
+    n_linear_drm: 2
+
+--------------------------------------------------

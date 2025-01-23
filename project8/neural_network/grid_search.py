@@ -304,15 +304,20 @@ def drm_3d_search(param_dict, name="drm_3d_search_results.txt"):
 
 
 if __name__ == "__main__":
-    # running now
+    # different search done
+    # pinn_3d_search(param_dicts.Problem5('pinn'), name="p5_pinn_search_results.txt")
+    # drm_3d_search(param_dicts.Problem5('drm'), name="p5_drm_search_results.txt")
+
+    # done
+    # pinn_2d_search(param_dicts.Problem1('pinn'), name="p1_pinn_search_results.txt")
+    # drm_2d_search(param_dicts.Problem1('drm'), name="p1_drm_search_results.txt")
+    # pinn_2d_search(param_dicts.Problem2('pinn'), name="p2_pinn_search_results.txt")
+    # drm_2d_search(param_dicts.Problem2('drm'), name="p2_drm_search_results.txt")
     # pinn_3d_search(param_dicts.Problem3('pinn'), name="p3_pinn_search_results.txt")
     # drm_3d_search(param_dicts.Problem3('drm'), name="p3_drm_search_results.txt")
     # pinn_3d_search(param_dicts.Problem4('pinn'), name="p4_pinn_search_results.txt")
     # drm_3d_search(param_dicts.Problem4('drm'), name="p4_drm_search_results.txt")
 
-    # previously done
-    # pinn_3d_search(param_dicts.Problem5('pinn'), name="p5_pinn_search_results.txt")
-    # drm_3d_search(param_dicts.Problem5('drm'), name="p5_drm_search_results.txt")
-
-    pinn_3d_search(param_dicts.Problem6('pinn'), name="p6_pinn_search_results.txt")
-    drm_3d_search(param_dicts.Problem6('drm'), name="p6_drm_search_results.txt")
+    # running now
+    # pinn_3d_search(param_dicts.Problem6('pinn'), name="p6_pinn_search_results.txt")
+    # drm_3d_search(param_dicts.Problem6('drm'), name="p6_drm_search_results.txt")
