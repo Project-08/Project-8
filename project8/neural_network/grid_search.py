@@ -317,7 +317,7 @@ if __name__ == "__main__":
     # drm_3d_search(param_dicts.Problem3('drm'), name="p3_drm_search_results.txt")
     # pinn_3d_search(param_dicts.Problem4('pinn'), name="p4_pinn_search_results.txt")
     # drm_3d_search(param_dicts.Problem4('drm'), name="p4_drm_search_results.txt")
-
-    # running now
     # pinn_3d_search(param_dicts.Problem6('pinn'), name="p6_pinn_search_results.txt")
     # drm_3d_search(param_dicts.Problem6('drm'), name="p6_drm_search_results.txt")
+
+    # running now

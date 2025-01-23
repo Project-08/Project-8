@@ -387,7 +387,6 @@ def Problem6(method: str = 'pinn') -> utils.Params:
         'n_out': 1,
         'weight_init_fn': torch.nn.init.xavier_uniform_,
         'bias_init_fn': torch.nn.init.zeros_,
-        'weight_init_kwargs': {'gain': 0.5},
         'bias_init_kwargs': {},
         'optimizer': torch.optim.Adam,
         'lr': 1e-3,
@@ -400,24 +399,26 @@ def Problem6(method: str = 'pinn') -> utils.Params:
         ],
     }
     match method:
-        case 'pinn': # TODO
+        case 'pinn': # optimized
             hyperparams.update({
                 'model_constructor': 'rectangular_fnn',
-                'act_fn': torch.nn.Tanh(),
-                'width': 256,
-                'depth': 8,
+                'weight_init_kwargs': {'gain': 1.0},
+                'act_fn': modules.Sin(),
+                'width': 128,
+                'depth': 4,
                 'loss_fns': [
                     lf.PINN.laplacian(lf.Problem6.source),
                     lf.General.dirichlet_bc,
                 ],
             })
-        case 'drm': # TODO
+        case 'drm': # optimized
             hyperparams.update({
                 'model_constructor': 'drm',
+                'weight_init_kwargs': {'gain': 1.5},
                 'act_fn': modules.PolyReLU(3),
-                'width': 64,
-                'n_blocks': 4,
-                'n_linear_drm': 2,
+                'width': 32,
+                'n_blocks': 2,
+                'n_linear_drm': 3,
                 'loss_fns': [
                     lf.DRM.laplacian(lf.Problem6.source),
                     lf.General.dirichlet_bc,
