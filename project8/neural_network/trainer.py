@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from project8.neural_network import utils
 from project8.neural_network.models import NN
 from copy import deepcopy
@@ -27,6 +29,7 @@ class trainer:
         self.loss_weights = params['loss_weights']
         self.device = params['device']
         self.loss_history: list[float] = []
+        self.error_history: list[list[float]] = [[], [], []]
         self.best_state = deepcopy(self.model.state_dict())
         self.best_loss = float('inf')
         self.best_epoch = 0
@@ -35,7 +38,7 @@ class trainer:
         self.clip_grads = True
         self.clip_value = 1.0
         self.terminate_on_stagnation = True
-        self.stagnation_epochs = 1000
+        self.stagnation_epochs = 1500
 
     def eval_loss_fn(self, i: int) -> torch.Tensor:
         self.model(self.data_loaders[i]())
@@ -79,3 +82,45 @@ class trainer:
             print(f'Best loss: {self.best_loss:.6f}'
                   f' at epoch {self.best_epoch}')
         self.timer.stop()
+
+    def train_plot(self, exact, title, fig_id):
+        coord_space = utils.ParameterSpace.from_rand_data(
+            self.params['loss_fn_data'][0])
+        grid = coord_space.fgrid(30)
+        grid.requires_grad = False
+        real = exact(grid)
+        self.error_history[0].append(torch.sqrt(torch.mean((self.model(grid) - real) ** 2)).item())
+        self.error_history[1].append(0)
+        self.error_history[2].append(0)
+        self.timer.start()
+        for epoch in range(1, self.params['n_epochs'] + 1):
+            if self.timer.elapsed() > 15:
+                break
+            self.step()
+            rmse = torch.sqrt(torch.mean((self.model(grid) - real) ** 2))
+            if rmse.item() < self.error_history[0][-1]:
+                self.error_history[0].append(rmse.item())
+                self.error_history[1].append(self.timer.elapsed())
+                self.error_history[2].append(epoch)
+            if (epoch % 100 == 0) and self.verbose:
+                print(f'Epoch: {epoch}, '
+                      f'Loss: {self.loss_history[-1]:.6f}, '
+                      f'Time: {utils.format_time(self.timer.elapsed())}')
+        self.timer.stop()
+        self.model.load_state_dict(self.best_state)
+        if self.verbose:
+            print(f'Best loss: {self.best_loss:.6f}'
+                  f' at epoch {self.best_epoch}')
+
+        print(len(self.error_history[0]))
+        plt.figure(fig_id)
+        plt.plot(self.error_history[0], self.error_history[1])
+        # plt.scatter(self.error_history[0], self.error_history[1], c='r', marker='x')
+        plt.ylabel('Time [s]')
+        plt.xlabel('RMSE')
+        plt.xscale('log')
+        plt.gca().invert_xaxis()
+        plt.title(title)
+        filename = title.replace(' ', '_').replace(':', '').replace('$', '').replace('\\', '') + '.png'
+        plt.savefig(utils.plot_folder + '/' + filename)
+
