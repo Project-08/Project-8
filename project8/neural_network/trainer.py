@@ -83,7 +83,12 @@ class trainer:
                   f' at epoch {self.best_epoch}')
         self.timer.stop()
 
-    def train_plot(self, exact, title, fig_id):
+    def train_plot(self,
+                   exact,
+                   title,
+                   fig_id,
+                   max_time=15,
+                   max_epochs=10000) -> None:
         coord_space = utils.ParameterSpace.from_rand_data(
             self.params['loss_fn_data'][0])
         grid = coord_space.fgrid(30)
@@ -93,8 +98,8 @@ class trainer:
         self.error_history[1].append(0)
         self.error_history[2].append(0)
         self.timer.start()
-        for epoch in range(1, self.params['n_epochs'] + 1):
-            if self.timer.elapsed() > 15:
+        for epoch in range(1, max_epochs + 1):
+            if self.timer.elapsed() > max_time:
                 break
             self.step()
             rmse = torch.sqrt(torch.mean((self.model(grid) - real) ** 2))

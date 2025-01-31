@@ -6,7 +6,7 @@ import torch
 def plot_(params, exact_sol, title, fig_id):
     model = models.NN.from_param_dict(params)
     trnr = trainer.trainer(model, params, verbose=True)
-    trnr.train_plot(exact_sol, title, fig_id)
+    trnr.train_plot(exact_sol, title, fig_id, max_time=15, max_epochs=10000)
 
 
 if __name__ == '__main__':

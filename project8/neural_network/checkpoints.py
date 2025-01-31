@@ -40,7 +40,8 @@ class file_synced_dict:
         torch.save(self.__contents, os.path.join(model_folder, self.filename))
 
     def load(self) -> None:
-        self.__contents = torch.load(os.path.join(model_folder, self.filename))
+        self.__contents = torch.load(os.path.join(model_folder, self.filename),
+            map_location=torch.device('cpu'))
 
     def __getitem__(self, key: Any) -> Any:
         return self.__contents[key]
