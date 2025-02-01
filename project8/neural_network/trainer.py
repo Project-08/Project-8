@@ -88,7 +88,7 @@ class trainer:
                    title,
                    fig_id,
                    max_time=15,
-                   max_epochs=10000) -> None:
+                   max_epochs=10000) -> tuple[list[float], list[float]]:
         coord_space = utils.ParameterSpace.from_rand_data(
             self.params['loss_fn_data'][0])
         grid = coord_space.fgrid(30)
@@ -119,13 +119,14 @@ class trainer:
 
         print(len(self.error_history[0]))
         plt.figure(fig_id)
-        plt.plot(self.error_history[0], self.error_history[1])
+        plt.plot(self.error_history[1], self.error_history[0])
         # plt.scatter(self.error_history[0], self.error_history[1], c='r', marker='x')
-        plt.ylabel('Time [s]')
-        plt.xlabel('RMSE')
-        plt.xscale('log')
-        plt.gca().invert_xaxis()
+        plt.xlabel('Time [s]')
+        plt.ylabel('RMSE')
+        plt.yscale('log')
         plt.title(title)
         filename = title.replace(' ', '_').replace(':', '').replace('$', '').replace('\\', '') + '.png'
         plt.savefig(utils.plot_folder + '/' + filename)
+
+        return self.error_history[0], self.error_history[1]
 
